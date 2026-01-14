@@ -12,7 +12,8 @@
     "demo:audit-log": "hardhat run scripts/demo_audit_log.ts",
     "demo:audit-log:baseSepolia": "hardhat run scripts/demo_audit_log.ts --network baseSepolia",
     "demo:rlwe": "tsx demo/demo.ts",
-    "test:rlwe": "tsx demo/test_crypto.ts"
+    "test:rlwe": "tsx demo/test_crypto.ts",
+    "test:lattica": "tsx demo/test_lattica_proof.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "2.0.2",

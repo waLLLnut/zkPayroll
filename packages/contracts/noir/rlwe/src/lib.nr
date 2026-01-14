@@ -10,12 +10,12 @@
 
 // ===== RLWE Parameters =====
 
-global RLWE_N: u32 = 1024;               // Polynomial degree
+pub global RLWE_N: u32 = 1024;               // Polynomial degree
 
 // Message encoding parameters
-global RLWE_SLOT_BITS: u32 = 8;
-global RLWE_SLOTS_PER_FR: u32 = 16;
-global RLWE_MESSAGE_SLOTS: u32 = 32;
+pub global RLWE_SLOT_BITS: u32 = 8;
+pub global RLWE_SLOTS_PER_FR: u32 = 16;
+pub global RLWE_MESSAGE_SLOTS: u32 = 32;
 
 // ===== Public Keys as Negacyclic Matrix Rows (Constants) =====
 // PK_A: 32 rows needed for c0 (message slots only)

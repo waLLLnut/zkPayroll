@@ -1,4 +1,4 @@
-use protocol_types::hash::poseidon2_hash_with_separator;
+pub use protocol_types::hash::poseidon2_hash_with_separator;
 
 mod context;
 mod uint253;
