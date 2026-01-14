@@ -6,8 +6,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import PQueue, { type QueueAddOptions } from "p-queue";
-import { promiseWithResolvers } from "../utils.js";
-import { inWorkingDir, makeRunCommand, splitInput } from "./utils.js";
+import { promiseWithResolvers } from "../utils";
+import { inWorkingDir, makeRunCommand, splitInput } from "./utils";
 
 export class MpcProverService {
   readonly #parties = {

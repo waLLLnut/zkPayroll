@@ -8,15 +8,11 @@ import {IVerifier, NoteInput, PublicInputs, AppendOnlyTreeSnapshot} from "./Util
 uint32 constant MAX_NOTES_PER_ROLLUP = 64;
 // Note: keep in sync with other languages
 uint32 constant MAX_NULLIFIERS_PER_ROLLUP = 64;
-// LWE parameters (must match noir/lwe/src/lib.nr)
-uint32 constant LWE_CT_SIZE = 1025;  // LWE_PK_COL
 
 struct PendingTx {
     bool rolledUp;
-    // TODO(perf): store a hash of the noteHashes and nullifiers and check when rolling up
     Fr[] noteHashes;
     Fr[] nullifiers;
-    bytes32[] lweCiphertexts;  // Each ciphertext is LWE_CT_SIZE Fields (32 bytes each)
 }
 
 contract PoolGeneric {
@@ -32,36 +28,25 @@ contract PoolGeneric {
         uint256 noteHashBatchIndex;
         AppendOnlyTreeSnapshot nullifierTree;
         uint256 nullifierBatchIndex;
-        // LWE audit log: nullifier → encrypted sender identity
-        mapping(bytes32 => bytes) lweAuditLog;
-        // LWE public key commitment (for verification)
-        bytes32 lwePublicKeyHash;
+        // __LatticA__: RLWE public key hash (for off-chain verification)
+        bytes32 rlwePublicKeyHash;
     }
 
-    // TODO(perf): emit only the ciphertext
     event EncryptedNotes(NoteInput[] encryptedNotes);
 
-    // TODO(perf): use dynamic array to save on gas costs
     event NoteHashes(
         uint256 indexed index,
         Fr[MAX_NOTES_PER_ROLLUP] noteHashes
     );
 
-    // TODO(perf): use dynamic array to save on gas costs
     event Nullifiers(
         uint256 indexed index,
         Fr[MAX_NULLIFIERS_PER_ROLLUP] nullifiers
     );
 
-    // LWE audit log event: emitted when ciphertext is stored
-    event LweAuditLog(
-        bytes32 indexed nullifier,
-        bytes ciphertext  // LWE_CT_SIZE * 32 bytes = 32,800 bytes
-    );
-
-    constructor(IVerifier rollupVerifier_, bytes32 lwePublicKeyHash_) {
+    constructor(IVerifier rollupVerifier_, bytes32 rlwePublicKeyHash_) {
         _poolGenericStorage().rollupVerifier = rollupVerifier_;
-        _poolGenericStorage().lwePublicKeyHash = lwePublicKeyHash_;
+        _poolGenericStorage().rlwePublicKeyHash = rlwePublicKeyHash_;
 
         _poolGenericStorage()
             .noteHashTree
@@ -89,14 +74,10 @@ contract PoolGeneric {
                 PendingTx memory pendingTx = _poolGenericStorage()
                     .allPendingTxs[txIndices[i]];
                 for (uint256 j = 0; j < pendingTx.noteHashes.length; j++) {
-                    pendingNoteHashes[noteHashesIdx++] = pendingTx.noteHashes[
-                        j
-                    ];
+                    pendingNoteHashes[noteHashesIdx++] = pendingTx.noteHashes[j];
                 }
                 for (uint256 j = 0; j < pendingTx.nullifiers.length; j++) {
-                    pendingNullifiers[nullifiersIdx++] = pendingTx.nullifiers[
-                        j
-                    ];
+                    pendingNullifiers[nullifiersIdx++] = pendingTx.nullifiers[j];
                 }
             }
         }
@@ -140,35 +121,6 @@ contract PoolGeneric {
             _poolGenericStorage().allPendingTxs[txIndex].rolledUp = true;
         }
 
-        // Store LWE audit logs: nullifier → ciphertext
-        {
-            uint256 nullifierIdx = 0;
-            for (uint256 i = 0; i < txIndices.length; i++) {
-                PendingTx memory pendingTx = _poolGenericStorage()
-                    .allPendingTxs[txIndices[i]];
-
-                // For each nullifier in this tx
-                for (uint256 j = 0; j < pendingTx.nullifiers.length; j++) {
-                    bytes32 nullifier = pendingNullifiers[nullifierIdx++].toBytes32();
-
-                    // Store ciphertext if present (1 CT per nullifier)
-                    if (j < pendingTx.lweCiphertexts.length) {
-                        bytes memory ct = abi.encodePacked(pendingTx.lweCiphertexts);
-
-                        // Verify nullifier not already used
-                        require(
-                            _poolGenericStorage().lweAuditLog[nullifier].length == 0,
-                            "Nullifier already has audit log"
-                        );
-
-                        // Store and emit
-                        _poolGenericStorage().lweAuditLog[nullifier] = ct;
-                        emit LweAuditLog(nullifier, ct);
-                    }
-                }
-            }
-        }
-
         // state update
         emit NoteHashes(
             _poolGenericStorage().noteHashBatchIndex++,
@@ -188,17 +140,12 @@ contract PoolGeneric {
      */
     function _PoolGeneric_addPendingTx(
         NoteInput[] memory noteInputs,
-        bytes32[] memory nullifiers,
-        bytes32[] memory lweCiphertexts  // LWE_CT_SIZE fields per ciphertext
+        bytes32[] memory nullifiers
     ) internal {
         require(noteInputs.length <= MAX_NOTES_PER_ROLLUP, "too many notes");
         require(
             nullifiers.length <= MAX_NULLIFIERS_PER_ROLLUP,
             "too many nullifiers"
-        );
-        require(
-            lweCiphertexts.length == 0 || lweCiphertexts.length == LWE_CT_SIZE * nullifiers.length,
-            "Invalid LWE ciphertext length"
         );
 
         _poolGenericStorage().allPendingTxs.push();
@@ -208,19 +155,12 @@ contract PoolGeneric {
 
         for (uint256 i = 0; i < noteInputs.length; i++) {
             Fr noteHash = FrLib.tryFrom(noteInputs[i].noteHash);
-            // TODO(perf): this is a waste of gas
             pendingTx.noteHashes.push(noteHash);
         }
 
         for (uint256 i = 0; i < nullifiers.length; i++) {
             Fr nullifier = FrLib.tryFrom(nullifiers[i]);
-            // TODO(perf): this is a waste of gas
             pendingTx.nullifiers.push(nullifier);
-        }
-
-        // Store LWE ciphertexts
-        for (uint256 i = 0; i < lweCiphertexts.length; i++) {
-            pendingTx.lweCiphertexts.push(lweCiphertexts[i]);
         }
 
         emit EncryptedNotes(noteInputs);
@@ -247,27 +187,14 @@ contract PoolGeneric {
     }
 
     /**
-     * @notice Get LWE ciphertext for a given nullifier (audit log)
-     * @param nullifier The nullifier to query
-     * @return ciphertext The encrypted sender identity (empty if not found)
+     * @notice Get RLWE public key hash (for off-chain verification)
      */
-    function getLweAuditLog(bytes32 nullifier)
-        external
-        view
-        returns (bytes memory)
-    {
-        return _poolGenericStorage().lweAuditLog[nullifier];
-    }
-
-    /**
-     * @notice Get LWE public key hash (for verification)
-     */
-    function getLwePublicKeyHash()
+    function getRlwePublicKeyHash()
         external
         view
         returns (bytes32)
     {
-        return _poolGenericStorage().lwePublicKeyHash;
+        return _poolGenericStorage().rlwePublicKeyHash;
     }
 
     function _poolGenericStorage()

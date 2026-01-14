@@ -20,4 +20,14 @@ export default defineConfig({
       target: "esnext",
     },
   },
+  ssr: {
+    // These are Node.js-only modules used by @repo/contracts/sdk
+    // They should only be bundled for SSR, not for client
+    external: [
+      "@aztec/foundation",
+      "@aztec/stdlib",
+      "@aztec/kv-store",
+      "@aztec/merkle-tree",
+    ],
+  },
 });

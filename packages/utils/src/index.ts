@@ -1,1 +1,1 @@
-export * as utils from "./utils.js";
+export * as utils from "./utils";

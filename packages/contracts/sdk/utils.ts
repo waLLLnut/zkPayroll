@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Hex } from "ox";
 import { assert } from "ts-essentials";
-import type { NoirAndBackend } from "./sdk.js";
+import type { NoirAndBackend } from "./sdk";
 
 export function printPublicInputs(publicInputs: string[]) {
   console.log("publicInputs js", publicInputs.length);

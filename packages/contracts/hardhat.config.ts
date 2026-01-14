@@ -1,6 +1,6 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
-// import "hardhat-noir";  // Disabled due to Noir version compatibility issues
+import "hardhat-noir";
 import { HardhatUserConfig } from "hardhat/config";
 import envConfig from "./envConfig";
 import "./shared/typed-hardhat-deploy";
@@ -15,9 +15,9 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  // noir: {
-  //   version: "1.0.0-beta.5",
-  // },
+  noir: {
+    version: "1.0.0-beta.5",
+  },
   networks: {
     baseSepolia: {
       url: "https://sepolia.base.org",
@@ -33,12 +33,46 @@ const config: HardhatUserConfig = {
         ? [envConfig.DEPLOYER_PRIVATE_KEY]
         : [],
     },
+    mantle: {
+      url: "https://rpc.mantle.xyz",
+      chainId: 5000,
+      accounts: envConfig.DEPLOYER_PRIVATE_KEY
+        ? [envConfig.DEPLOYER_PRIVATE_KEY]
+        : [],
+    },
+    mantleSepolia: {
+      url: "https://rpc.sepolia.mantle.xyz",
+      chainId: 5003,
+      accounts: envConfig.DEPLOYER_PRIVATE_KEY
+        ? [envConfig.DEPLOYER_PRIVATE_KEY]
+        : [],
+    },
   },
   etherscan: {
     apiKey: {
       sepolia: "BSFWY85F56JH998I6GBM1R4YZJTM6G5WGA",
       baseSepolia: process.env.BASESCAN_API_KEY || "",
+      mantle: process.env.MANTLE_API_KEY || "",
+      mantleSepolia: process.env.MANTLE_API_KEY || "",
     },
+    customChains: [
+      {
+        network: "mantle",
+        chainId: 5000,
+        urls: {
+          apiURL: "https://explorer.mantle.xyz/api",
+          browserURL: "https://explorer.mantle.xyz",
+        },
+      },
+      {
+        network: "mantleSepolia",
+        chainId: 5003,
+        urls: {
+          apiURL: "https://explorer.sepolia.mantle.xyz/api",
+          browserURL: "https://explorer.sepolia.mantle.xyz",
+        },
+      },
+    ],
   },
   namedAccounts: {
     deployer: {

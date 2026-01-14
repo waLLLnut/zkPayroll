@@ -1,0 +1,10 @@
+[package]
+name = "rlwe_audit"
+type = "bin"
+authors = ["LatticA"]
+compiler_version = ">=0.39.0"
+
+[dependencies]
+rlwe = { path = "../rlwe" }
+common = { path = "../common" }
+protocol_types = { git = "https://github.com/AztecProtocol/aztec-packages/", tag = "v0.84.0", directory = "noir-projects/noir-protocol-circuits/crates/types" }

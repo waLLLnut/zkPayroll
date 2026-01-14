@@ -1,8 +1,8 @@
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers, noir, typedDeployments } from "hardhat";
-import type { sdk as interfaceSdk } from "../sdk";
-import type { createBackendSdk } from "../sdk/backendSdk";
+import { sdk as interfaceSdkModule } from "../sdk";
+import { createBackendSdk as createBackendSdkFn } from "../sdk/backendSdk";
 import { SwapResult } from "../sdk/LobService";
 import { parseUnits, snapshottedBeforeEach } from "../shared/utils";
 import {
@@ -11,7 +11,6 @@ import {
   PoolERC20,
   PoolERC20__factory,
 } from "../typechain-types";
-const { tsImport } = require("tsx/esm/api"); // TODO: remove when hardhat supports ESM
 
 describe("PoolERC20", () => {
   let alice: SignerWithAddress,
@@ -26,10 +25,10 @@ describe("PoolERC20", () => {
   let pool: PoolERC20;
   let usdc: MockERC20;
   let btc: MockERC20;
-  let sdk: ReturnType<typeof interfaceSdk.createInterfaceSdk>;
-  let backendSdk: ReturnType<typeof createBackendSdk>;
-  let CompleteWaAddress: typeof import("../sdk").sdk.CompleteWaAddress;
-  let TokenAmount: typeof import("../sdk").sdk.TokenAmount;
+  let sdk: ReturnType<typeof interfaceSdkModule.createInterfaceSdk>;
+  let backendSdk: ReturnType<typeof createBackendSdkFn>;
+  const { CompleteWaAddress, TokenAmount } = interfaceSdkModule;
+
   snapshottedBeforeEach(async () => {
     [alice, bob, charlie] = await ethers.getSigners();
     await typedDeployments.fixture();
@@ -47,26 +46,13 @@ describe("PoolERC20", () => {
     await btc.connect(bob).approve(pool, ethers.MaxUint256);
     await btc.mintForTests(charlie, await parseUnits(btc, "1000000"));
     await btc.connect(charlie).approve(pool, ethers.MaxUint256);
-
-    ({ CompleteWaAddress, TokenAmount } = (
-      await tsImport("../sdk", __filename)
-    ).sdk);
   });
 
   before(async () => {
-    const { sdk: interfaceSdk } = (await tsImport(
-      "../sdk",
-      __filename,
-    )) as typeof import("../sdk");
-    const { createBackendSdk } = (await tsImport(
-      "../sdk/backendSdk",
-      __filename,
-    )) as typeof import("../sdk/backendSdk");
+    const coreSdk = interfaceSdkModule.createCoreSdk(pool);
 
-    const coreSdk = interfaceSdk.createCoreSdk(pool);
-
-    const trees = new interfaceSdk.TreesService(pool);
-    sdk = interfaceSdk.createInterfaceSdk(coreSdk, trees, {
+    const trees = new interfaceSdkModule.TreesService(pool);
+    sdk = interfaceSdkModule.createInterfaceSdk(coreSdk, trees, {
       shield: noir.getCircuitJson("erc20_shield"),
       unshield: noir.getCircuitJson("erc20_unshield"),
       join: noir.getCircuitJson("erc20_join"),
@@ -74,7 +60,7 @@ describe("PoolERC20", () => {
       swap: noir.getCircuitJson("lob_router_swap"),
     });
 
-    backendSdk = createBackendSdk(coreSdk, trees, {
+    backendSdk = createBackendSdkFn(coreSdk, trees, {
       rollup: noir.getCircuitJson("rollup"),
     });
 

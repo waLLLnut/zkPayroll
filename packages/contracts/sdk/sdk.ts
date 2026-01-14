@@ -2,18 +2,22 @@ import type { CompiledCircuit } from "@noir-lang/noir_js";
 import { ethers } from "ethers";
 import { mapValues } from "lodash-es";
 import type { AsyncOrSync } from "ts-essentials";
-import type { PoolERC20 } from "../typechain-types/index.js";
-import { EncryptionService } from "./EncryptionService.js";
-import { LobService } from "./LobService.js";
-import { MpcProverService } from "./mpc/MpcNetworkService.js";
-import { PoolErc20Service } from "./PoolErc20Service.js";
-import { type ITreesService } from "./RemoteTreesService.js";
+import type { PoolERC20 } from "../typechain-types";
+import { EncryptionService } from "./EncryptionService";
+import { LobService } from "./LobService";
+import { MpcProverService } from "./mpc/MpcNetworkService";
+import { PoolErc20Service } from "./PoolErc20Service";
+import { type ITreesService } from "./RemoteTreesService";
 
-export * from "./EncryptionService.js";
-export * from "./NonMembershipTree.js";
-export * from "./PoolErc20Service.js";
-export * from "./RemoteTreesService.js";
-export * from "./TreesService.js";
+export * from "./EncryptionService";
+export * from "./PoolErc20Service";
+export * from "./RemoteTreesService";
+export * from "./AuditLogService";
+export * from "./RlweKeygenService";
+export * from "./RlweAuditService";
+
+// Note: NonMembershipTree and TreesService are server-only (use @aztec/kv-store/lmdb)
+// Import them from "./serverSdk" instead
 
 export function createCoreSdk(contract: PoolERC20) {
   const encryption = EncryptionService.getSingleton();

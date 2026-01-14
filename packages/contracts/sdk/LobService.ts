@@ -1,9 +1,9 @@
-import { uniq } from "lodash";
+import { uniq } from "lodash-es";
 import { assert, type AsyncOrSync } from "ts-essentials";
 import { type PoolERC20 } from "../typechain-types";
 import { NoteInputStruct } from "../typechain-types/contracts/PoolERC20";
-import { MpcProverService, type Side } from "./mpc/MpcNetworkService.js";
-import { splitInput } from "./mpc/utils.js";
+import { MpcProverService, type Side } from "./mpc/MpcNetworkService";
+import { splitInput } from "./mpc/utils";
 import {
   CompleteWaAddress,
   Erc20Note,
@@ -11,9 +11,9 @@ import {
   TokenAmount,
   type NoirAndBackend,
   type PoolErc20Service,
-} from "./PoolErc20Service.js";
-import { type ITreesService } from "./RemoteTreesService.js";
-import { prove } from "./utils.js";
+} from "./PoolErc20Service";
+import { type ITreesService } from "./RemoteTreesService";
+import { prove } from "./utils";
 
 export class LobService {
   constructor(

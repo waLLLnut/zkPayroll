@@ -3,6 +3,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 declare module "hardhat/types/runtime" {
   interface TypedHardhatDeployNames {
     PoolERC20: "PoolERC20";
+    MockERC20: "MockERC20";
   }
 }
 
@@ -18,7 +19,7 @@ const deploy: DeployFunction = async ({
       from: deployer,
       log: true,
       args: [],
-      contract: `noir/target/${circuitName}.sol:HonkVerifier`,
+      contract: `contracts/verifiers/${circuitName}.sol:HonkVerifier`,
     });
   }
   const shieldVerifier = await deployVerifier(
@@ -40,6 +41,10 @@ const deploy: DeployFunction = async ({
   );
   const rollupVerifier = await deployVerifier("RollupVerifier", "rollup");
 
+  // __LatticA__: Mock LWE public key hash for testing
+  // In production, this would be derived from the threshold RLWE public key
+  const lwePublicKeyHash = "0x" + "1".repeat(64);
+
   const pool = await typedDeployments.deploy("PoolERC20", {
     from: deployer,
     log: true,
@@ -50,7 +55,15 @@ const deploy: DeployFunction = async ({
       transferVerifier.address,
       swapVerifier.address,
       rollupVerifier.address,
+      lwePublicKeyHash,  // __LatticA__: RLWE public key hash for audit log verification
     ],
+  });
+
+  // Deploy MockERC20 for testing
+  const mockERC20 = await typedDeployments.deploy("MockERC20", {
+    from: deployer,
+    log: true,
+    args: ["USD Coin", "USDC"],
   });
 };
 

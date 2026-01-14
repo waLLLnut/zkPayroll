@@ -11,4 +11,6 @@ members = [
   "common",
   "rlwe",
   "rlwe_bench",
+  "rlwe_audit",
+  "rlwe_fraud_proof",
 ]

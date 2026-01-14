@@ -13,7 +13,7 @@ import {
   type NoirAndBackend,
 } from "./PoolErc20Service";
 import type { TreesService } from "./TreesService";
-import { prove } from "./utils.js";
+import { prove } from "./utils";
 
 export class RollupService {
   constructor(

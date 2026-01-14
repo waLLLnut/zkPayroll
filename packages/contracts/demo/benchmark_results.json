@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-01-14T19:24:46.305Z",
+  "results": [
+    {
+      "metric": "Compile Time",
+      "value": "6.29",
+      "unit": "seconds"
+    },
+    {
+      "metric": "Test Execution Time",
+      "value": "16.58",
+      "unit": "seconds"
+    },
+    {
+      "metric": "Memory Delta (RSS)",
+      "value": "0 B",
+      "unit": ""
+    },
+    {
+      "metric": "Est. Gas per Unshield",
+      "value": "450,000",
+      "unit": "gas"
+    },
+    {
+      "metric": "Est. Gas (3 batch)",
+      "value": "1,350,000",
+      "unit": "gas"
+    },
+    {
+      "metric": "Est. Cost per Unshield",
+      "value": "0.00",
+      "unit": "USD (30 gwei, $3k ETH)"
+    }
+  ]
+}

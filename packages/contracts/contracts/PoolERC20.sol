@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Fr, FrLib, keccak256ToFr} from "./Fr.sol";
 import {IVerifier, NoteInput, TokenAmount, Call, Execution, MAX_TOKENS_IN_PER_EXECUTION, MAX_TOKENS_OUT_PER_EXECUTION, PublicInputs, U256_LIMBS} from "./Utils.sol";
-import {PoolGeneric, LWE_CT_SIZE} from "./PoolGeneric.sol";
+import {PoolGeneric} from "./PoolGeneric.sol";
 
 // Note: keep in sync with other languages
 uint32 constant MAX_NOTES_TO_JOIN = 2;
@@ -22,6 +22,12 @@ contract PoolERC20 is PoolGeneric {
         IVerifier transferVerifier;
         IVerifier swapVerifier;
     }
+
+    // __LatticA__: Event for audit log linking (wa_commitment only, ciphertext off-chain)
+    event UnshieldAuditLog(
+        bytes32 indexed nullifier,
+        bytes32 waCommitment
+    );
 
     constructor(
         IVerifier shieldVerifier,
@@ -51,7 +57,6 @@ contract PoolERC20 is PoolGeneric {
         pi.push(getNoteHashTree().root);
         pi.push(address(token));
         pi.pushUint256Limbs(amount);
-        // TODO(security): ensure noteHash does not already exist in the noteHashTree. If it exists, the tx will never be rolled up and the money will be lost.
         pi.push(note.noteHash);
         require(
             _poolErc20Storage().shieldVerifier.verify(proof, pi.finish()),
@@ -62,47 +67,63 @@ contract PoolERC20 is PoolGeneric {
             NoteInput[] memory noteInputs = new NoteInput[](1);
             noteInputs[0] = note;
             bytes32[] memory nullifiers;
-            bytes32[] memory lweCiphertexts;  // No LWE for shield
-            _PoolGeneric_addPendingTx(noteInputs, nullifiers, lweCiphertexts);
+            _PoolGeneric_addPendingTx(noteInputs, nullifiers);
         }
     }
 
+    /**
+     * @notice Unshield tokens from privacy pool
+     * @dev __LatticA__: Circuit now outputs wa_commitment for audit proof linking
+     *
+     * Circuit output: {note_hashes[1], nullifiers[1], wa_commitment}
+     *
+     * The wa_commitment links this proof to a separate RLWE audit proof
+     * that the relayer verifies off-chain (optimistic verification)
+     */
     function unshield(
         bytes calldata proof,
         IERC20 token,
         address to,
         uint256 amount,
         bytes32 nullifier,
-        NoteInput calldata changeNote
+        NoteInput calldata changeNote,
+        bytes32 waCommitment  // __LatticA__: for audit proof linking
     ) external {
-        // TODO(security): bring back unshield. It was removed because nullifiers are no longer checked on tx level. Only when the tx is rolled up.
-        require(false, "not implemented");
+        // Circuit public inputs:
+        // 1. tree_roots.note_hash_root
+        // 2. to
+        // 3. amount.token
+        // 4. amount.amount (U256)
+        // Circuit public outputs:
+        // 5. note_hashes[0]
+        // 6. nullifiers[0]
+        // 7. wa_commitment
 
-        PublicInputs.Type memory pi = PublicInputs.create(6 + 1);
-        // params
+        PublicInputs.Type memory pi = PublicInputs.create(1 + 1 + 1 + 1 + 1 + 1 + 1);
         pi.push(getNoteHashTree().root);
-        pi.push(getNullifierTree().root);
         pi.push(to);
         pi.push(address(token));
         pi.pushUint256Limbs(amount);
-        // result
         pi.push(changeNote.noteHash);
         pi.push(nullifier);
+        pi.push(waCommitment);
+
         require(
             _poolErc20Storage().unshieldVerifier.verify(proof, pi.finish()),
             "Invalid unshield proof"
         );
+
+        // __LatticA__: Emit audit log event for relayer to index
+        emit UnshieldAuditLog(nullifier, waCommitment);
 
         {
             NoteInput[] memory noteInputs = new NoteInput[](1);
             noteInputs[0] = changeNote;
             bytes32[] memory nullifiers = new bytes32[](1);
             nullifiers[0] = nullifier;
-            bytes32[] memory lweCiphertexts;  // TODO: Add LWE for unshield
-            _PoolGeneric_addPendingTx(noteInputs, nullifiers, lweCiphertexts);
+            _PoolGeneric_addPendingTx(noteInputs, nullifiers);
         }
 
-        // effects
         token.safeTransfer(to, amount);
     }
 
@@ -131,8 +152,7 @@ contract PoolERC20 is PoolGeneric {
             for (uint256 i = 0; i < nullifiers.length; i++) {
                 nullifiersDyn[i] = nullifiers[i];
             }
-            bytes32[] memory lweCiphertexts;  // TODO: Add LWE for join
-            _PoolGeneric_addPendingTx(noteInputs, nullifiersDyn, lweCiphertexts);
+            _PoolGeneric_addPendingTx(noteInputs, nullifiersDyn);
         }
     }
 
@@ -140,25 +160,13 @@ contract PoolERC20 is PoolGeneric {
         bytes calldata proof,
         bytes32 nullifier,
         NoteInput calldata changeNote,
-        NoteInput calldata toNote,
-        bytes32[] calldata lweCiphertext  // LWE_CT_SIZE = 1025 fields
+        NoteInput calldata toNote
     ) external {
-        // Verify LWE ciphertext size
-        require(
-            lweCiphertext.length == 0 || lweCiphertext.length == LWE_CT_SIZE,
-            "Invalid LWE ciphertext size"
-        );
-
-        PublicInputs.Type memory pi = PublicInputs.create(4 + lweCiphertext.length);
+        PublicInputs.Type memory pi = PublicInputs.create(4);
         pi.push(getNoteHashTree().root);
         pi.push(changeNote.noteHash);
         pi.push(toNote.noteHash);
         pi.push(nullifier);
-
-        // Add LWE ciphertext to public inputs for verification
-        for (uint256 i = 0; i < lweCiphertext.length; i++) {
-            pi.push(lweCiphertext[i]);
-        }
 
         require(
             _poolErc20Storage().transferVerifier.verify(proof, pi.finish()),
@@ -171,11 +179,10 @@ contract PoolERC20 is PoolGeneric {
             noteInputs[1] = toNote;
             bytes32[] memory nullifiers = new bytes32[](1);
             nullifiers[0] = nullifier;
-            _PoolGeneric_addPendingTx(noteInputs, nullifiers, lweCiphertext);
+            _PoolGeneric_addPendingTx(noteInputs, nullifiers);
         }
     }
 
-    // TODO: move to a separate contract
     function swap(
         bytes calldata proof,
         NoteInput[4] calldata notes,
@@ -204,8 +211,7 @@ contract PoolERC20 is PoolGeneric {
             for (uint256 i = 0; i < nullifiers.length; i++) {
                 nullifiersDyn[i] = nullifiers[i];
             }
-            bytes32[] memory lweCiphertexts;  // TODO: Add LWE for swap
-            _PoolGeneric_addPendingTx(noteInputs, nullifiersDyn, lweCiphertexts);
+            _PoolGeneric_addPendingTx(noteInputs, nullifiersDyn);
         }
     }
 
