@@ -2,6 +2,7 @@
 name = "lob_router"
 type = "lib"
 authors = ["Oleh Misarosh <olehmisar@gmail.com>"]
+compiler_version = ">=0.39.0"
 
 [dependencies]
 common = { path = "../common" }

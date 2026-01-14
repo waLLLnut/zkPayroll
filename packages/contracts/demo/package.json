@@ -8,13 +8,13 @@
     "compile": "npx tsx compile_circuits.ts"
   },
   "dependencies": {
-    "@aztec/bb.js": "^0.63.1",
-    "@noir-lang/noir_js": "^0.36.0",
-    "@noble/curves": "^1.4.0",
-    "ethers": "^6.13.0"
+    "@aztec/bb.js": "0.86.0",
+    "@noir-lang/noir_js": "1.0.0-beta.5",
+    "@noble/curves": "1.4.0",
+    "ethers": "6.13.4"
   },
   "devDependencies": {
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.0"
+    "tsx": "4.19.2",
+    "typescript": "5.3.3"
   }
 }

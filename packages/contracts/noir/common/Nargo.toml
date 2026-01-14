@@ -2,6 +2,7 @@
 name = "common"
 type = "lib"
 authors = ["Oleh Misarosh <olehmisar@gmail.com>"]
+compiler_version = ">=0.39.0"
 
 [dependencies]
 protocol_types = { git = "https://github.com/AztecProtocol/aztec-packages/", tag = "v3.0.1", directory = "noir-projects/noir-protocol-circuits/crates/types" }

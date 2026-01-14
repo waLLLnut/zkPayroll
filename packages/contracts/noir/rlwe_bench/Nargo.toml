@@ -2,7 +2,7 @@
 name = "rlwe_bench"
 type = "bin"
 authors = [""]
-compiler_version = ">=0.34.0"
+compiler_version = ">=0.39.0"
 
 [dependencies]
 rlwe = { path = "../rlwe" }
