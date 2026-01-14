@@ -53,7 +53,21 @@ impl PublicKey {
 /// ```
 pub fn derive_public_key(secret_key: Field) -> PublicKey {
     // Convert secret key to embedded curve scalar
-    let scalar = EmbeddedCurveScalar { lo: secret_key as u128, hi: 0 };
+    // Split Field into two u64 parts (low and high)
+    let bytes: [u8; 32] = secret_key.to_be_bytes();
+
+    // lo = lower 128 bits (bytes 16-31), hi = upper 128 bits (bytes 0-15)
+    let mut lo: Field = 0;
+    let mut hi: Field = 0;
+
+    for i in 0..16 {
+        hi = hi * 256 + bytes[i] as Field;
+    }
+    for i in 16..32 {
+        lo = lo * 256 + bytes[i] as Field;
+    }
+
+    let scalar = EmbeddedCurveScalar { lo, hi };
 
     // Scalar multiplication: PubKey = secret_key * G
     // This uses the Baby JubJub generator point G embedded in BN254
