@@ -1,0 +1,4 @@
+Stage,Backend,Time(s),Memory(MB),Status
+Compilation,Noir,0.03,11.56,✅
+Witness Generation,Noir,0.02,11.57,✅
+Tests,Noir,0.03,11.56,✅

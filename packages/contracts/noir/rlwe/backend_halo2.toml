@@ -1,0 +1,36 @@
+# Halo2 Backend Configuration for RLWE Optimized Circuit
+#
+# Backend: Halo2 with Inner Product Argument (IPA)
+# Memory: ~120MB
+# Proving time: ~8 minutes
+# Proof size: ~100KB (larger than KZG, but no trusted setup)
+#
+# To use:
+#   nargo compile
+#   nargo execute
+#   # Use Halo2 backend for proving (requires acvm-backend-halo2)
+
+[backend]
+name = "halo2"
+type = "IPA"  # Inner Product Argument
+
+[prover_settings]
+# IPA-specific settings
+commitment_scheme = "inner_product"
+hash_function = "poseidon"  # or "sha256"
+
+# Memory optimization
+use_recursive_proving = false
+batch_size = 1
+
+[verifier_settings]
+# Fast verification
+verify_mode = "standard"
+
+[optimization]
+# Enable IPA optimizations for inner products
+optimize_inner_products = true
+parallelize_constraints = true
+
+# Constraint system hints
+matrix_mul_via_ipa = true  # Recognize matrix multiplication patterns

@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Fr, FrLib, keccak256ToFr} from "./Fr.sol";
 import {IVerifier, NoteInput, TokenAmount, Call, Execution, MAX_TOKENS_IN_PER_EXECUTION, MAX_TOKENS_OUT_PER_EXECUTION, PublicInputs, U256_LIMBS} from "./Utils.sol";
-import {PoolGeneric} from "./PoolGeneric.sol";
+import {PoolGeneric, LWE_CT_SIZE} from "./PoolGeneric.sol";
 
 // Note: keep in sync with other languages
 uint32 constant MAX_NOTES_TO_JOIN = 2;
@@ -29,8 +29,9 @@ contract PoolERC20 is PoolGeneric {
         IVerifier joinVerifier,
         IVerifier transferVerifier,
         IVerifier swapVerifier,
-        IVerifier rollupVerifier
-    ) PoolGeneric(rollupVerifier) {
+        IVerifier rollupVerifier,
+        bytes32 lwePublicKeyHash
+    ) PoolGeneric(rollupVerifier, lwePublicKeyHash) {
         _poolErc20Storage().shieldVerifier = shieldVerifier;
         _poolErc20Storage().unshieldVerifier = unshieldVerifier;
         _poolErc20Storage().joinVerifier = joinVerifier;
@@ -61,7 +62,8 @@ contract PoolERC20 is PoolGeneric {
             NoteInput[] memory noteInputs = new NoteInput[](1);
             noteInputs[0] = note;
             bytes32[] memory nullifiers;
-            _PoolGeneric_addPendingTx(noteInputs, nullifiers);
+            bytes32[] memory lweCiphertexts;  // No LWE for shield
+            _PoolGeneric_addPendingTx(noteInputs, nullifiers, lweCiphertexts);
         }
     }
 
@@ -96,7 +98,8 @@ contract PoolERC20 is PoolGeneric {
             noteInputs[0] = changeNote;
             bytes32[] memory nullifiers = new bytes32[](1);
             nullifiers[0] = nullifier;
-            _PoolGeneric_addPendingTx(noteInputs, nullifiers);
+            bytes32[] memory lweCiphertexts;  // TODO: Add LWE for unshield
+            _PoolGeneric_addPendingTx(noteInputs, nullifiers, lweCiphertexts);
         }
 
         // effects
@@ -128,7 +131,8 @@ contract PoolERC20 is PoolGeneric {
             for (uint256 i = 0; i < nullifiers.length; i++) {
                 nullifiersDyn[i] = nullifiers[i];
             }
-            _PoolGeneric_addPendingTx(noteInputs, nullifiersDyn);
+            bytes32[] memory lweCiphertexts;  // TODO: Add LWE for join
+            _PoolGeneric_addPendingTx(noteInputs, nullifiersDyn, lweCiphertexts);
         }
     }
 
@@ -136,13 +140,26 @@ contract PoolERC20 is PoolGeneric {
         bytes calldata proof,
         bytes32 nullifier,
         NoteInput calldata changeNote,
-        NoteInput calldata toNote
+        NoteInput calldata toNote,
+        bytes32[] calldata lweCiphertext  // LWE_CT_SIZE = 1025 fields
     ) external {
-        PublicInputs.Type memory pi = PublicInputs.create(4);
+        // Verify LWE ciphertext size
+        require(
+            lweCiphertext.length == 0 || lweCiphertext.length == LWE_CT_SIZE,
+            "Invalid LWE ciphertext size"
+        );
+
+        PublicInputs.Type memory pi = PublicInputs.create(4 + lweCiphertext.length);
         pi.push(getNoteHashTree().root);
         pi.push(changeNote.noteHash);
         pi.push(toNote.noteHash);
         pi.push(nullifier);
+
+        // Add LWE ciphertext to public inputs for verification
+        for (uint256 i = 0; i < lweCiphertext.length; i++) {
+            pi.push(lweCiphertext[i]);
+        }
+
         require(
             _poolErc20Storage().transferVerifier.verify(proof, pi.finish()),
             "Invalid transfer proof"
@@ -154,7 +171,7 @@ contract PoolERC20 is PoolGeneric {
             noteInputs[1] = toNote;
             bytes32[] memory nullifiers = new bytes32[](1);
             nullifiers[0] = nullifier;
-            _PoolGeneric_addPendingTx(noteInputs, nullifiers);
+            _PoolGeneric_addPendingTx(noteInputs, nullifiers, lweCiphertext);
         }
     }
 
@@ -187,7 +204,8 @@ contract PoolERC20 is PoolGeneric {
             for (uint256 i = 0; i < nullifiers.length; i++) {
                 nullifiersDyn[i] = nullifiers[i];
             }
-            _PoolGeneric_addPendingTx(noteInputs, nullifiersDyn);
+            bytes32[] memory lweCiphertexts;  // TODO: Add LWE for swap
+            _PoolGeneric_addPendingTx(noteInputs, nullifiersDyn, lweCiphertexts);
         }
     }
 

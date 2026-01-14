@@ -2,6 +2,7 @@
 artifacts
 cache
 typechain-types
+deployments
 
 # Tests
 coverage
@@ -9,6 +10,7 @@ coverage.json
 
 # Lib
 node_modules
+pnpm-lock.yaml
 
 # IDE
 .vscode
@@ -19,8 +21,12 @@ node_modules
 # Misc
 .DS_Store
 
+# Noir build outputs
 Prover.toml
+noir/target/
+*.gz
 
+# Data files
 data
 configs
 bn254_g*.dat

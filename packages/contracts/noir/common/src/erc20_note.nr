@@ -33,14 +33,16 @@ impl Erc20Note {
     }
 }
 
-impl crate::Serialize<4> for Erc20Note {
-    fn serialize(self) -> [Field; 4] {
+// Serialize: [owner.x, owner.y, token, amount, randomness] = 5 fields
+// Changed from 4 to 5 because WaAddress is now 2 fields (x, y) instead of 1
+impl crate::Serialize<5> for Erc20Note {
+    fn serialize(self) -> [Field; 5] {
         self
             .owner
-            .serialize()
-            .concat(self.amount.token.serialize())
-            .concat([self.amount.amount.to_integer()])
-            .concat([self.randomness])
+            .serialize()  // 2 fields: [x, y]
+            .concat(self.amount.token.serialize())  // 1 field
+            .concat([self.amount.amount.to_integer()])  // 1 field
+            .concat([self.randomness])  // 1 field
     }
 }
 

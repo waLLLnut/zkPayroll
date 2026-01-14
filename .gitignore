@@ -1,5 +1,6 @@
 .DS_Store
 node_modules
+pnpm-lock.yaml
 build
 dist
 .vercel
@@ -13,8 +14,18 @@ vite.config.ts.timestamp-*
 
 codegenCache.json
 
+# Hardhat
 artifacts
 cache
-target
+typechain-types
+deployments
 
+# Noir
+target
 **/target/*.bak
+**/target/*.gz
+**/target/*.json
+Prover.toml
+
+# Claude Code
+.claude/

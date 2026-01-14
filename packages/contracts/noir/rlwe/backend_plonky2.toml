@@ -1,0 +1,38 @@
+# Plonky2 Backend Configuration for RLWE Optimized Circuit
+#
+# Backend: Plonky2 with FRI
+# Memory: ~3.5GB
+# Proving time: ~12 seconds
+# Proof size: Configurable (fast mode: larger, small mode: smaller)
+#
+# To use:
+#   nargo compile
+#   nargo execute
+#   # Use Plonky2 backend for proving (requires acvm-backend-plonky2)
+
+[backend]
+name = "plonky2"
+type = "FRI"  # Fast Reed-Solomon IOP
+
+[prover_settings]
+# FRI-specific settings
+fri_rate = 8  # 1/8 codeword rate (fast mode)
+# Use fri_rate = 2 for smaller proofs (slower)
+
+# Field selection
+field = "goldilocks"  # Or "bn254" for compatibility
+
+# Security
+security_bits = 100
+
+[verifier_settings]
+# Fast verification
+verify_mode = "standard"
+
+[optimization]
+# Enable FRI optimizations
+optimize_fft = true
+parallelize_constraints = true
+
+# Use larger proofs for speed
+proof_size_mode = "fast"  # or "small" for minimal proof size

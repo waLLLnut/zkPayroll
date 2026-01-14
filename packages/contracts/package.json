@@ -5,7 +5,14 @@
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy": "pnpm hardhat deploy-and-export",
-    "deploy:localhost": "rm -rf deployments/localhost && pnpm hardhat deploy-and-export --network localhost --gasprice 1gwei"
+    "deploy:localhost": "rm -rf deployments/localhost && pnpm hardhat deploy-and-export --network localhost --gasprice 1gwei",
+    "deploy:audit-log": "hardhat deploy --tags AuditLog",
+    "deploy:audit-log:baseSepolia": "hardhat deploy --tags AuditLog --network baseSepolia",
+    "deploy:audit-log:sepolia": "hardhat deploy --tags AuditLog --network sepolia",
+    "demo:audit-log": "hardhat run scripts/demo_audit_log.ts",
+    "demo:audit-log:baseSepolia": "hardhat run scripts/demo_audit_log.ts --network baseSepolia",
+    "demo:rlwe": "tsx demo/demo.ts",
+    "test:rlwe": "tsx demo/test_crypto.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",

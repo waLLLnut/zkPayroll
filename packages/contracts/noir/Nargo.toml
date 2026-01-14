@@ -9,4 +9,6 @@ members = [
   "lob_router_swap",
   "rollup",
   "common",
+  "rlwe",
+  "rlwe_bench",
 ]

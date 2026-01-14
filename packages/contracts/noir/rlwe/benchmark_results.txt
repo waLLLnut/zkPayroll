@@ -1,0 +1,15 @@
+Compilation (Noir):
+  Time: 0:00.03
+  Memory: 11.56 MB
+  Status: ✅
+
+Witness Generation (Noir):
+  Time: 0:00.02
+  Memory: 11.57 MB
+  Status: ✅
+
+Tests (Noir):
+  Time: 0:00.03
+  Memory: 11.56 MB
+  Status: ✅
+

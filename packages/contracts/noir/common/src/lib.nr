@@ -5,6 +5,7 @@ mod uint253;
 mod erc20_note;
 pub(crate) mod note;
 mod owned_note;
+mod eddsa;  // Baby JubJub EdDSA implementation
 
 pub use context::{Context, Result};
 pub use note::{compute_note_hash, Note};
@@ -48,21 +49,51 @@ pub global U256_LIMBS: u32 = 3;
 
 pub type U256 = uint253::U253;
 
-/// User address within the rollup
-#[derive(Eq, Serialize)]
+/// User address within the rollup (Baby JubJub public key)
+///
+/// This represents a user's identity in the shielded pool.
+/// It is derived from a secret key using Baby JubJub elliptic curve cryptography.
+///
+/// Security:
+/// - Public key provides ~128-bit security (ECDLP hardness)
+/// - Cannot be reversed to recover secret key
+/// - Supports zero-knowledge ownership proofs
+///
+/// Format: (x, y) coordinates on Baby JubJub twisted Edwards curve
+#[derive(Eq)]
 pub struct WaAddress {
-    inner: Field,
+    pub x: Field,  // Public key x-coordinate
+    pub y: Field,  // Public key y-coordinate
+}
+
+impl Serialize<2> for WaAddress {
+    fn serialize(self) -> [Field; 2] {
+        [self.x, self.y]
+    }
 }
 
 impl WaAddress {
+    /// Zero address (identity element on curve)
     pub fn zero() -> Self {
-        Self { inner: 0 }
+        Self { x: 0, y: 1 }  // Identity point on twisted Edwards curve
     }
 
+    /// Derive WaAddress from secret key using Baby JubJub
+    ///
+    /// Computation: WaAddress = secret_key * G (generator)
+    ///
+    /// This provides cryptographically strong identity unlike simple hashing.
+    /// The secret key must remain private (witness only).
     pub fn from_secret_key(secret_key: Field) -> Self {
-        // TODO(security): wtf is this? Use an actual private/public key cryptography
-        let inner = poseidon2_hash_with_separator([secret_key], GENERATOR_INDEX__WA_ADDRESS);
-        Self { inner }
+        let pubkey = eddsa::derive_public_key(secret_key);
+        Self { x: pubkey.x, y: pubkey.y }
+    }
+
+    /// Compute a hash of the address for storage/comparison
+    ///
+    /// Used when a single Field representation is needed.
+    pub fn to_hash(self) -> Field {
+        poseidon2_hash_with_separator([self.x, self.y], GENERATOR_INDEX__WA_ADDRESS)
     }
 }
 
