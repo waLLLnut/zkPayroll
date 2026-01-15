@@ -6,6 +6,12 @@ Fork of [nemi-fi/mezcal](https://github.com/nemi-fi/mezcal) with **RLWE-based au
 
 > **LatticA Audit Module** enables privacy-preserving compliance for any ZK pool. Sender identities are encrypted with RLWE and can only be decrypted via 2-of-3 threshold approval by authorized auditors.
 
+![LatticA System Architecture](circuit.svg)
+
+**Key improvements**: Traditional solutions use `Hash(sk)` as address (fast but no encryption/identity proof). We use:
+1. **Grumpkin curve**: `(x, y) = sk · G` for real public key coordinates enabling encryption
+2. **RLWE encryption**: Threshold decryption (2-of-3) prevents single-party access to audit data
+
 ## Version Compatibility
 
 ### Backend (packages/contracts)
