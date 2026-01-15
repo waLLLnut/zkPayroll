@@ -126,6 +126,22 @@ Noir, Solidity, Hardhat, Ethers.js, TypeScript, SvelteKit, pnpm
 **Frontend**: SvelteKit 2.7.2, Svelte 5.0.5, Vite, Tailwind CSS  
 **Testing**: Chai, Vitest, Hardhat Gas Reporter
 
+## Contract Addresses
+
+### Mantle Sepolia (Chain ID: 5003)
+
+| Contract | Address |
+|----------|---------|
+| PoolERC20 | `0x8554023e95557A47cdCBCDf3f7002b1d2924d9cD` |
+| RollupVerifier | `0x1cDa73DacD45eef50C689143E4eEf2aaE6b66296` |
+| Erc20ShieldVerifier | `0xE2C034a8475e3e08E044C7090C2D547c54b6C5c1` |
+| Erc20UnshieldVerifier | `0x14DFf1BA04DCbEA5B84658b228bA74ae8183F829` |
+| Erc20TransferVerifier | `0x28E89D046abf0Db583d58A5B0Ac12a9B0222476a` |
+| Erc20JoinVerifier | `0xe40fEFfa9B5CaE95ceDA2ba35f89B8e4485CD269` |
+| LobRouterSwapVerifier | `0x311e84a311A2de8f977AaC77D93B6c8B6c420EbB` |
+| MockUSDC | `0xBbd207660362fad3DB0f1dEcccfA1fF20BdF878B` |
+| MockBTC | `0x827e88CEae659e6777Aa57F68FA7a2CbE6012de4` |
+
 ## License
 
 This project is a fork of Mezcal. See the original repository for licensing details.
