@@ -29,6 +29,9 @@ export class NativeUltraHonkBackend {
       `${circuitHash}_${witnessHash}_proof`,
     );
 
+    // proofOutputPath 디렉토리 미리 생성
+    fs.mkdirSync(proofOutputPath, { recursive: true });
+
     fs.writeFileSync(circuitJsonPath, JSON.stringify(this.circuit));
     fs.writeFileSync(witnessOutputPath, witness);
     const args = [
@@ -43,6 +46,8 @@ export class NativeUltraHonkBackend {
       proofOutputPath,
       "--oracle_hash",
       "keccak",
+      "--output_format",
+      "bytes_and_fields", // proof와 public inputs를 모두 출력
     ];
 
     const bbProcess = spawn(this.bbPath, args);

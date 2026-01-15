@@ -1,8 +1,8 @@
 import { uniq } from "lodash";
 import { assert, type AsyncOrSync } from "ts-essentials";
 import { type PoolERC20 } from "../typechain-types";
-import { NoteInputStruct } from "../typechain-types/contracts/PoolERC20";
-import { MpcProverService, type Side } from "./mpc/MpcNetworkService.js";
+import { type NoteInputStruct } from "../typechain-types/contracts/PoolERC20";
+import { MpcProverService, type OrderId, type Side } from "./mpc/MpcNetworkService.js";
 import { splitInput } from "./mpc/utils.js";
 import {
   CompleteWaAddress,
@@ -175,7 +175,7 @@ export class LobService {
       ...inputPublic,
     });
     const proofs = await this.mpcProver.prove(inputsShared, {
-      orderId,
+      orderId: orderId as OrderId,
       side,
       circuit: swapCircuit.circuit,
     });

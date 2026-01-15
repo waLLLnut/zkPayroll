@@ -2,15 +2,29 @@
   "31337": {
     "chainId": "31337",
     "contracts": {
-      "ExecuteVerifier": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-      "MockBTC": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
-      "MockUSDC": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
-      "PoolERC20": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-      "RollupVerifier": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-      "RouterERC20": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
-      "ShieldVerifier": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-      "TransferVerifier": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+      "Erc20JoinVerifier": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      "Erc20ShieldVerifier": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "Erc20TransferVerifier": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      "Erc20UnshieldVerifier": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      "LobRouterSwapVerifier": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+      "PoolERC20": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+      "RollupVerifier": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707"
     },
-    "name": "localhost"
+    "name": "hardhat"
+  },
+  "5003": {
+    "chainId": "5003",
+    "contracts": {
+      "Erc20JoinVerifier": "0xe3B816FEaCd750B8de53A6f8a0A644199b97A8B7",
+      "Erc20ShieldVerifier": "0xcfaa739e56516176E945E8F3238aeEbc7B054421",
+      "Erc20TransferVerifier": "0xa6D73ff87F305F669ef346179c0847C8a067F8BC",
+      "Erc20UnshieldVerifier": "0x9326e1bC6932e167F07894C7D487c2a9bc72eDe5",
+      "LobRouterSwapVerifier": "0x3e2275D939cdbEC7EB35c5689D482fccb33e4c7E",
+      "MockBTC": "0x03ff5DdC5F0Ac6d29A95b2DC40d67aA92F617B87",
+      "MockUSDC": "0x4b550c7e8a7Dd6F73558ebf6336d2BAFbf4b4715",
+      "PoolERC20": "0x2936efb67601a81E956028A75C8AD39c843a7F27",
+      "RollupVerifier": "0x1F2642Aaf871C3509B29033480caBFA82a34958C"
+    },
+    "name": "mantleSepolia"
   }
 }

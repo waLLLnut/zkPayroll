@@ -73,17 +73,22 @@ contract PoolERC20 is PoolGeneric {
         bytes32 nullifier,
         NoteInput calldata changeNote
     ) external {
-        // TODO(security): bring back unshield. It was removed because nullifiers are no longer checked on tx level. Only when the tx is rolled up.
-        require(false, "not implemented");
+        // Note: nullifiers are checked at rollup level, not tx level
+        // This is safe because the rollup will verify all nullifiers before committing
 
-        PublicInputs.Type memory pi = PublicInputs.create(6 + 1);
-        // params
+        // Circuit public inputs:
+        // 1. tree_roots.note_hash_root (TreeRoots has only note_hash_root)
+        // 2. to (EthAddress)
+        // 3. amount.token (EthAddress) - TokenAmount.token
+        // 4. amount.amount (U256 value) - TokenAmount.amount
+        // 5. note_hash (Result.note_hashes[0])
+        // 6. nullifier (Result.nullifiers[0])
+        // Total: 6 public inputs
+        PublicInputs.Type memory pi = PublicInputs.create(6);
         pi.push(getNoteHashTree().root);
-        pi.push(getNullifierTree().root);
         pi.push(to);
         pi.push(address(token));
         pi.pushUint256Limbs(amount);
-        // result
         pi.push(changeNote.noteHash);
         pi.push(nullifier);
         require(

@@ -18,3 +18,7 @@ cache
 target
 
 **/target/*.bak
+
+*.json
+!package.json
+!.eslintrc.json

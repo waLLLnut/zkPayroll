@@ -3,12 +3,12 @@ import { sdk } from "@repo/contracts/sdk/index.js";
 import { z } from "zod";
 
 const schema = z.object({
-  method: z.enum(sdk.REMOTE_TREES_ALLOWED_METHODS),
+  method: z.enum(sdk.REMOTE_TREES_ALLOWED_METHODS as [string, ...string[]]),
   args: z.array(z.any()),
 });
 export async function POST({ request }) {
   const inputs = schema.parse(await request.json());
-  const result = await serverLib.trees[inputs.method](
+  const result = await (serverLib.trees as any)[inputs.method](
     ...(inputs.args as [any, any, any]),
   );
   return Response.json(result);

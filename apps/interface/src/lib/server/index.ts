@@ -4,7 +4,9 @@ import { createBackendSdk } from "@repo/contracts/sdk/backendSdk";
 
 const trees = new sdk.TreesService(lib.contract);
 const backendSdk = createBackendSdk(lib, trees, {
-  rollup: import("@repo/contracts/noir/target/rollup.json"),
+  rollup: import("@repo/contracts/noir/target/rollup.json").then(
+    (m) => m.default as any,
+  ),
 });
 
 export const serverLib = {

@@ -4,6 +4,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
+    "test:bob-payroll": "tsx scripts/test-bob-payroll-scenario.ts",
     "deploy": "pnpm hardhat deploy-and-export",
     "deploy:localhost": "rm -rf deployments/localhost && pnpm hardhat deploy-and-export --network localhost --gasprice 1gwei"
   },

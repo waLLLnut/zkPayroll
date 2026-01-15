@@ -20,23 +20,32 @@ task("deploy-and-export")
     types.string,
     true,
   )
-  .addParam(
+  .addOptionalParam(
     "gasprice",
-    "Price in wei per unit of gas",
+    "Price in wei per unit of gas (e.g., '1gwei')",
     undefined,
     types.string,
-    false,
   )
+  .addFlag("reset", "Reset deployments and force redeploy")
   .setAction(async (args, hre) => {
-    const unit = "gwei";
-    assert(args.gasprice.endsWith(unit), `gasprice must end with ${unit}`);
-    const gasprice = ethers
-      .parseUnits(args.gasprice.slice(0, -unit.length), unit)
-      .toString();
-    await hre.run("deploy", {
+    const deployOptions: any = {
       tags: args.tags,
-      gasprice: gasprice,
-    });
+    };
+    
+    if (args.reset) {
+      deployOptions.reset = true;
+    }
+    
+    if (args.gasprice) {
+      const unit = "gwei";
+      assert(args.gasprice.endsWith(unit), `gasprice must end with ${unit}`);
+      const gasprice = ethers
+        .parseUnits(args.gasprice.slice(0, -unit.length), unit)
+        .toString();
+      deployOptions.gasprice = gasprice;
+    }
+    
+    await hre.run("deploy", deployOptions);
     await hre.run("export-all");
   });
 
@@ -100,7 +109,7 @@ async function safeGetNamedAccounts<N extends Record<string, true>>(
   hre: HardhatRuntimeEnvironment,
   names: N,
 ): Promise<Record<keyof N, string>> {
-  const { pick } = await import("lodash");
+  const { pick } = await import("lodash-es");
   const addresses = await hre.getNamedAccounts();
   const namesAsArray = Object.keys(names);
   const invalidName = namesAsArray.find(

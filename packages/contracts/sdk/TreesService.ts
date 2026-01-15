@@ -14,7 +14,11 @@ import {
 } from "./PoolErc20Service";
 
 export class TreesService {
-  constructor(private contract: PoolERC20) {}
+  private fromBlock: number | undefined;
+
+  constructor(private contract: PoolERC20, options?: { fromBlock?: number }) {
+    this.fromBlock = options?.fromBlock;
+  }
 
   getTreeRoots = z
     .function()
@@ -89,7 +93,10 @@ export class TreesService {
   async #getNoteHashTree() {
     const { Fr } = await import("@aztec/aztec.js");
     const noteHashes = sortEventsWithIndex(
-      await this.contract.queryFilter(this.contract.filters.NoteHashes()),
+      await this.contract.queryFilter(
+        this.contract.filters.NoteHashes(),
+        this.fromBlock,
+      ),
     ).map((x) => x.noteHashes);
 
     const noteHashTree = await createMerkleTree(NOTE_HASH_TREE_HEIGHT);
@@ -106,7 +113,10 @@ export class TreesService {
     const { Fr } = await import("@aztec/aztec.js");
 
     const nullifiers = sortEventsWithIndex(
-      await this.contract.queryFilter(this.contract.filters.Nullifiers()),
+      await this.contract.queryFilter(
+        this.contract.filters.Nullifiers(),
+        this.fromBlock,
+      ),
     ).map((x) => x.nullifiers.map((n) => new Fr(BigInt(n))));
 
     // add 1 to the nullifier tree, so it's possible to add new nullifiers to it(adding requires a non-zero low leaf)

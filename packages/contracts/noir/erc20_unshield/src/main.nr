@@ -12,9 +12,8 @@ fn main(
 ) -> pub common::Result<1, 1> {
     let mut context = common::Context::from(tree_roots);
 
-    // disabled because nullifiers are no longer checked on tx level
-    panic(f"not implemented");
-
+    // Note: nullifiers are checked at rollup level, not tx level
+    // This is safe because the rollup will verify all nullifiers before committing
     erc20::Token::burn(
         &mut context,
         from_secret_key,

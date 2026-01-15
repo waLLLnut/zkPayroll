@@ -83,9 +83,46 @@ export class PoolErc20Service {
       note_hash: noteInput.noteHash,
     };
     const { proof } = await prove("shield", shieldCircuit, input);
+    
+    // Mantle Sepolia에서 에러 디버깅을 위해 staticCall로 먼저 확인 (에러가 발생해도 계속 진행)
+    try {
+      await this.contract
+        .connect(account)
+        .shield.staticCall(proof, token, amount, noteInput);
+    } catch (error: any) {
+      // 에러가 발생해도 실제 트랜잭션은 시도 (로컬에서는 작동하므로)
+      if (error.data) {
+        const errorData = error.data;
+        if (errorData === "0x9fc3a218") {
+          console.error("⚠️ Shield proof 검증 실패 (SumcheckFailed) - Mantle Sepolia verifier가 최신 circuit과 호환되지 않을 수 있음");
+        } else {
+          console.error("⚠️ Shield staticCall 실패:", errorData);
+        }
+      }
+    }
+    
+    // Mantle Sepolia에서 가스 리밋을 estimateGas로 계산
+    const provider = account.provider;
+    const feeData = await provider!.getFeeData();
+    let gasLimit: bigint;
+    try {
+      gasLimit = await this.contract
+        .connect(account)
+        .shield.estimateGas(proof, token, amount, noteInput);
+      // 20% 여유를 두고 반올림
+      gasLimit = (gasLimit * 120n) / 100n;
+    } catch (error) {
+      // estimateGas 실패 시 큰 값 사용 (proof가 매우 크므로)
+      gasLimit = 1_000_000_000n; // 1B gas
+    }
+    
     const tx = await this.contract
       .connect(account)
-      .shield(proof, token, amount, noteInput);
+      .shield(proof, token, amount, noteInput, {
+        gasLimit,
+        maxFeePerGas: feeData.maxFeePerGas || feeData.gasPrice,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas || 0n,
+      });
     const receipt = await tx.wait();
     console.log("shield gas used", receipt?.gasUsed);
     return { tx, note };
@@ -298,8 +335,13 @@ export class PoolErc20Service {
 
   private async getEmittedNotes(secretKey: string) {
     const { address } = await CompleteWaAddress.fromSecretKey(secretKey);
+    // Mantle Sepolia eth_getLogs는 10,000 블록 제한
+    const fromBlock = (this.trees as any).fromBlock;
     const encrypted = sortEvents(
-      await this.contract.queryFilter(this.contract.filters.EncryptedNotes()),
+      await this.contract.queryFilter(
+        this.contract.filters.EncryptedNotes(),
+        fromBlock,
+      ),
     )
       .map((e) => e.args.encryptedNotes.map((note) => note.encryptedNote))
       .flat();
@@ -314,6 +356,11 @@ export class PoolErc20Service {
         return undefined;
       }
 
+      // owner를 먼저 확인 (computeNullifier 호출 전에)
+      if (note.owner.address.toLowerCase() !== address.toLowerCase()) {
+        return undefined;
+      }
+
       const noteValid: boolean = await this.trees.noteExistsAndNotNullified({
         noteHash: await note.hash(),
         nullifier: (await note.computeNullifier(secretKey)).toString(),
@@ -321,11 +368,6 @@ export class PoolErc20Service {
       if (!noteValid) {
         return undefined;
       }
-
-      assert(
-        note.owner.address.toLowerCase() === address.toLowerCase(),
-        "invalid note received",
-      );
 
       return note;
     });

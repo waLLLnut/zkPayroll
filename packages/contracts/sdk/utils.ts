@@ -96,19 +96,46 @@ export function promiseWithResolvers<T>(): {
 }
 
 export function readNativeHonkProof(pathToProofDir: string) {
-  const proof = fs.readFileSync(path.join(pathToProofDir, "proof"));
-  const publicInputs = fs.readFileSync(
-    path.join(pathToProofDir, "public_inputs"),
-  );
-  assert(
-    publicInputs.length % 32 === 0,
-    "publicInputs length must be divisible by 32",
-  );
+  const proofPath = path.join(pathToProofDir, "proof");
+  const publicInputsPath = path.join(pathToProofDir, "public_inputs");
+  const proofFieldsPath = path.join(pathToProofDir, "proof_fields.json");
+  
+  let proof = fs.readFileSync(proofPath);
+  
+  // bb 바이너리가 생성하는 proof는 첫 4바이트가 길이 헤더임
+  // UltraHonkBackend는 길이 헤더 없이 proof를 기대하므로 항상 제거
+  if (proof.length > 4) {
+    proof = proof.slice(4);
+  }
+  
+  // public_inputs 파일 또는 proof_fields.json 파일에서 public inputs 추출
+  let publicInputs: string[];
+  if (fs.existsSync(publicInputsPath)) {
+    // 바이너리 형식의 public_inputs 파일이 있는 경우
+    const publicInputsBuffer = fs.readFileSync(publicInputsPath);
+    assert(
+      publicInputsBuffer.length % 32 === 0,
+      "publicInputs length must be divisible by 32",
+    );
+    publicInputs = chunk(Array.from(publicInputsBuffer), 32).map((x) =>
+      Hex.fromBytes(Uint8Array.from(x)),
+    );
+  } else if (fs.existsSync(proofFieldsPath)) {
+    // proof_fields.json 파일이 있는 경우 (bb 바이너리가 생성)
+    const proofFields = JSON.parse(
+      fs.readFileSync(proofFieldsPath, "utf-8"),
+    ) as string[];
+    publicInputs = proofFields;
+  } else {
+    // 둘 다 없으면 빈 배열 반환
+    console.warn(
+      `public_inputs or proof_fields.json not found in ${pathToProofDir}, using empty array`,
+    );
+    publicInputs = [];
+  }
+  
   return {
     proof,
-    // TODO: not sure if this publicInputs decoding is correct
-    publicInputs: chunk(Array.from(publicInputs), 32).map((x) =>
-      Hex.fromBytes(Uint8Array.from(x)),
-    ),
+    publicInputs,
   };
 }
