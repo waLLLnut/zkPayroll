@@ -1,5 +1,6 @@
 import type { Fr } from "@aztec/aztec.js";
 import type { UltraHonkBackend } from "@aztec/bb.js";
+import { poseidon2Hash as aztecPoseidon2Hash } from "@aztec/foundation/crypto";
 import type { CompiledCircuit, Noir } from "@noir-lang/noir_js";
 import { utils } from "@repo/utils";
 import { ethers } from "ethers";
@@ -9,6 +10,7 @@ import { type PoolERC20 } from "../typechain-types";
 import { EncryptionService } from "./EncryptionService";
 import type { ITreesService } from "./RemoteTreesService";
 import { prove, toNoirU256 } from "./utils";
+import { derivePublicKey as grumpkinDerivePublicKey, hexToBigInt, bigIntToHex, type GrumpkinPoint } from "./grumpkin";
 
 // Note: keep in sync with other languages
 export const NOTE_HASH_TREE_HEIGHT = 40;
@@ -510,12 +512,34 @@ export class TokenAmount {
   }
 }
 
+/**
+ * WaAddress represents a user's identity in the shielded pool.
+ *
+ * In Noir, WaAddress is a Baby JubJub/Grumpkin public key (x, y coordinates).
+ * For SDK compatibility, we store it as a single Field (the hash of x and y).
+ *
+ * @deprecated Use `address` field which is now computed from Grumpkin pubkey
+ */
 export type WaAddress = string;
 
+/**
+ * Grumpkin public key coordinates (matches Noir's WaAddress struct)
+ */
+export interface WaAddressCoords {
+  x: string;  // hex string
+  y: string;  // hex string
+}
+
 export class CompleteWaAddress {
+  /**
+   * @param address - wa_address hash (poseidon2_hash_with_separator([x, y], 1))
+   * @param publicKey - encryption public key (for note encryption)
+   * @param waCoords - Grumpkin public key (x, y) coordinates (optional, for audit)
+   */
   constructor(
     readonly address: WaAddress,
     readonly publicKey: string,
+    readonly waCoords?: WaAddressCoords,
   ) {}
 
   toString() {
@@ -530,13 +554,46 @@ export class CompleteWaAddress {
     return new CompleteWaAddress(address, publicKey);
   }
 
+  /**
+   * Derive CompleteWaAddress from secret key
+   *
+   * This now correctly uses Grumpkin curve scalar multiplication
+   * to match Noir's WaAddress::from_secret_key() implementation.
+   *
+   * Process:
+   * 1. Compute Grumpkin public key: (x, y) = secretKey * G
+   * 2. Compute wa_commitment: hash([1, x, y])
+   * 3. Derive encryption public key (for note encryption)
+   *
+   * The `address` field is now the wa_commitment (hash of x, y).
+   */
   static async fromSecretKey(secretKey: string) {
-    const address = (
-      await poseidon2Hash([GENERATOR_INDEX__WA_ADDRESS, secretKey])
-    ).toString();
+    // 1. Derive Grumpkin public key: pubKey = secretKey * G
+    const secretKeyBigInt = hexToBigInt(secretKey);
+    const grumpkinPubKey: GrumpkinPoint = grumpkinDerivePublicKey(secretKeyBigInt);
+
+    // Store coordinates for audit purposes
+    const waCoords: WaAddressCoords = {
+      x: bigIntToHex(grumpkinPubKey.x),
+      y: bigIntToHex(grumpkinPubKey.y),
+    };
+
+    // 2. Compute wa_commitment: hash([GENERATOR_INDEX, x, y])
+    // This matches Noir's WaAddress::to_hash()
+    const waCommitment = await poseidon2Hash([
+      GENERATOR_INDEX__WA_ADDRESS,
+      grumpkinPubKey.x,
+      grumpkinPubKey.y,
+    ]);
+
+    // The address is the wa_commitment hash
+    const address = waCommitment.toString();
+
+    // 3. Derive encryption public key (for note encryption)
     const publicKey =
       await EncryptionService.getSingleton().derivePublicKey(secretKey);
-    return new CompleteWaAddress(address, publicKey);
+
+    return new CompleteWaAddress(address, publicKey, waCoords);
   }
 
   equal(other: CompleteWaAddress) {
@@ -544,6 +601,19 @@ export class CompleteWaAddress {
       utils.isAddressEqual(this.address, other.address) &&
       this.publicKey === other.publicKey
     );
+  }
+
+  /**
+   * Get Grumpkin public key coordinates
+   * Throws if waCoords was not stored (created via fromString)
+   */
+  getWaCoords(): WaAddressCoords {
+    if (!this.waCoords) {
+      throw new Error(
+        "WaAddress coordinates not available. Use fromSecretKey() to create CompleteWaAddress with coordinates."
+      );
+    }
+    return this.waCoords;
   }
 }
 
@@ -553,12 +623,16 @@ export type NoirAndBackend = {
   backend: UltraHonkBackend;
 };
 
+/**
+ * Poseidon2 hash using Aztec's implementation
+ *
+ * IMPORTANT: This uses @aztec/foundation/crypto which matches Noir's poseidon2.
+ * Do NOT use poseidon-lite as it uses different constants and produces different results.
+ */
 export async function poseidon2Hash(inputs: (bigint | string | number)[]) {
-  // Use poseidon-lite for browser compatibility (instead of @aztec/foundation/crypto)
-  const { poseidon2 } = await import("poseidon-lite");
   const { Fr } = await import("@aztec/aztec.js");
-  const result = poseidon2(inputs.map((x) => BigInt(x)));
-  return new Fr(result) as Fr;
+  const frInputs = inputs.map((x) => new Fr(BigInt(x)));
+  return await aztecPoseidon2Hash(frInputs);
 }
 
 function sortEvents<
@@ -587,49 +661,66 @@ export async function getRandomness() {
  *
  * The separator is prepended to the inputs before hashing.
  */
-export async function computeWaCommitmentFromXY(waAddressX: string, waAddressY: string): Promise<Fr> {
+export async function computeWaCommitmentFromXY(
+  waAddressX: string | bigint,
+  waAddressY: string | bigint
+): Promise<Fr> {
   // Matches Noir: poseidon2_hash_with_separator([x, y], GENERATOR_INDEX__WA_ADDRESS)
   // The separator is prepended: hash([separator, x, y])
   return await poseidon2Hash([GENERATOR_INDEX__WA_ADDRESS, waAddressX, waAddressY]);
 }
 
 /**
- * __LatticA__: Derive wa_address (public key) from secret key and compute commitment
+ * __LatticA__: Derive wa_address (Grumpkin public key) from secret key
  *
- * Matches Noir: WaAddress::from_secret_key() which uses Baby JubJub curve.
- * Since we don't have Baby JubJub in JS, we use the same derive_public_key logic.
+ * Correctly uses Grumpkin curve scalar multiplication to match
+ * Noir's WaAddress::from_secret_key() implementation.
  *
- * Note: In production, this should use actual Baby JubJub scalar multiplication.
- * For now we derive from the poseidon hash of the secret key (matching the SDK pattern).
+ * Returns:
+ * - x, y: Grumpkin public key coordinates
+ * - commitment: wa_commitment hash for on-chain storage
  */
 export async function deriveWaAddressFromSecretKey(
   secretKey: string,
-): Promise<{ x: Fr; y: Fr; commitment: Fr }> {
-  // In the current implementation, WaAddress is derived from secret_key * G
-  // where G is the Baby JubJub generator. The x,y coordinates are the public key.
-  //
-  // For SDK, we use CompleteWaAddress.fromSecretKey which computes:
-  // address = poseidon2Hash([GENERATOR_INDEX__WA_ADDRESS, secretKey])
-  //
-  // This is a simplified model - the x coordinate acts as the address,
-  // and we derive y from x for completeness.
-  const x = await poseidon2Hash([GENERATOR_INDEX__WA_ADDRESS, secretKey]);
+): Promise<{ x: bigint; y: bigint; commitment: Fr }> {
+  // 1. Derive Grumpkin public key: pubKey = secretKey * G
+  const secretKeyBigInt = hexToBigInt(secretKey);
+  const grumpkinPubKey = grumpkinDerivePublicKey(secretKeyBigInt);
 
-  // In Noir, y is derived from Baby JubJub. For compatibility, we use a deterministic derivation.
-  // Note: This may not match exactly if Noir uses actual elliptic curve operations.
-  const y = x; // Simplified: using x as placeholder for y
+  // 2. Compute wa_commitment: hash([GENERATOR_INDEX, x, y])
+  const commitment = await computeWaCommitmentFromXY(
+    grumpkinPubKey.x,
+    grumpkinPubKey.y
+  );
 
-  // Commitment matches Noir's WaAddress::to_hash()
-  const commitment = await computeWaCommitmentFromXY(x.toString(), y.toString());
-
-  return { x, y, commitment };
+  return {
+    x: grumpkinPubKey.x,
+    y: grumpkinPubKey.y,
+    commitment,
+  };
 }
 
 /**
- * __LatticA__: Simple wa_commitment computation from single address field
- * Used when only the address (x coordinate) is available
+ * __LatticA__: Compute wa_commitment from CompleteWaAddress
+ *
+ * If waCoords are available (from fromSecretKey), uses those.
+ * Otherwise falls back to deriving from secret key (requires secretKey parameter).
  */
-export async function computeWaCommitment(waAddress: string): Promise<Fr> {
-  // Simplified: treat address as both x and y
-  return await computeWaCommitmentFromXY(waAddress, waAddress);
+export async function computeWaCommitment(waAddress: CompleteWaAddress): Promise<Fr>;
+export async function computeWaCommitment(secretKey: string): Promise<Fr>;
+export async function computeWaCommitment(input: CompleteWaAddress | string): Promise<Fr> {
+  if (typeof input === "string") {
+    // Input is secretKey, derive full wa_address
+    const { commitment } = await deriveWaAddressFromSecretKey(input);
+    return commitment;
+  } else {
+    // Input is CompleteWaAddress
+    const waCoords = input.waCoords;
+    if (waCoords) {
+      return await computeWaCommitmentFromXY(waCoords.x, waCoords.y);
+    }
+    // Fallback: address is already the commitment
+    const { Fr } = await import("@aztec/aztec.js");
+    return new Fr(BigInt(input.address));
+  }
 }

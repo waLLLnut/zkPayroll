@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { ethers, typedDeployments } from "hardhat";
 import { sdk as interfaceSdkModule } from "../sdk";
 import { createBackendSdk as createBackendSdkFn } from "../sdk/backendSdk";
+import { TreesService } from "../sdk/serverSdk";
 import { parseUnits, snapshottedBeforeEach } from "../shared/utils";
 import {
   MockERC20,
@@ -89,7 +90,7 @@ describe("LatticA: Optimistic Challenge Flow", () => {
     );
 
     const coreSdk = interfaceSdkModule.createCoreSdk(tempPool);
-    const trees = new interfaceSdkModule.TreesService(tempPool);
+    const trees = new TreesService(tempPool);
 
     sdk = interfaceSdkModule.createInterfaceSdk(coreSdk, trees, {
       shield: getCircuitJson("erc20_shield"),

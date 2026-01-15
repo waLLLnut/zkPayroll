@@ -16,6 +16,7 @@ import { expect } from "chai";
 import { ethers, noir, typedDeployments } from "hardhat";
 import { sdk as interfaceSdkModule } from "../sdk";
 import { createBackendSdk as createBackendSdkFn } from "../sdk/backendSdk";
+import { TreesService } from "../sdk/serverSdk";
 import { parseUnits, snapshottedBeforeEach } from "../shared/utils";
 import {
   MockERC20,
@@ -84,7 +85,7 @@ describe("__LatticA__ Complete Scenario Test", () => {
 
   before(async () => {
     const coreSdk = interfaceSdkModule.createCoreSdk(pool);
-    const trees = new interfaceSdkModule.TreesService(pool);
+    const trees = new TreesService(pool);
 
     sdk = interfaceSdkModule.createInterfaceSdk(coreSdk, trees, {
       shield: noir.getCircuitJson("erc20_shield"),
