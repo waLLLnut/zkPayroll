@@ -144,9 +144,15 @@ importers:
       '@aztec/bb.js':
         specifier: 0.84.0-nightly.20250410
         version: 0.84.0-nightly.20250410
+      '@aztec/foundation':
+        specifier: 0.86.0
+        version: 0.86.0
       '@aztec/merkle-tree':
         specifier: ^3.0.2
         version: 3.0.2(typescript@5.3.3)
+      '@aztec/stdlib':
+        specifier: 0.86.0
+        version: 0.86.0(typescript@5.3.3)
       '@hpke/core':
         specifier: 1.7.1
         version: 1.7.1

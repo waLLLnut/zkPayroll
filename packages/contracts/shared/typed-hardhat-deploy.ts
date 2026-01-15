@@ -100,7 +100,6 @@ async function safeGetNamedAccounts<N extends Record<string, true>>(
   hre: HardhatRuntimeEnvironment,
   names: N,
 ): Promise<Record<keyof N, string>> {
-  const { pick } = await import("lodash");
   const addresses = await hre.getNamedAccounts();
   const namesAsArray = Object.keys(names);
   const invalidName = namesAsArray.find(
@@ -111,7 +110,12 @@ async function safeGetNamedAccounts<N extends Record<string, true>>(
       `Invalid "namedAccounts" for network ${hre.network.name}: "${invalidName}" (${addresses[invalidName]})`,
     );
   }
-  return pick(addresses, namesAsArray) as Record<keyof N, string>;
+  // Manual pick implementation to avoid lodash ESM/CJS issues
+  const result: Record<string, string> = {};
+  for (const name of namesAsArray) {
+    result[name] = addresses[name];
+  }
+  return result as Record<keyof N, string>;
 }
 
 type CustomNames = OmitProperties<

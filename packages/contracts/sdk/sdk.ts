@@ -1,6 +1,6 @@
 import type { CompiledCircuit } from "@noir-lang/noir_js";
 import { ethers } from "ethers";
-import { mapValues } from "lodash-es";
+import { mapValues } from "lodash";
 import type { AsyncOrSync } from "ts-essentials";
 import type { PoolERC20 } from "../typechain-types";
 import { EncryptionService } from "./EncryptionService";

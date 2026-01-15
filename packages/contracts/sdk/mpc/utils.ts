@@ -1,6 +1,6 @@
 import type { CompiledCircuit, InputMap } from "@noir-lang/noir_js";
 import { ethers } from "ethers";
-import { range } from "lodash-es";
+import { range } from "lodash";
 import fs from "node:fs";
 import path from "node:path";
 import toml from "smol-toml";

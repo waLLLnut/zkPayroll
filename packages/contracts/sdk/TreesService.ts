@@ -1,7 +1,7 @@
 import type { Fr } from "@aztec/aztec.js";
 import type { StandardTree } from "@aztec/merkle-tree";
 import { ethers } from "ethers";
-import { isEqual, orderBy, range, times } from "lodash-es";
+import { isEqual, orderBy, range, times } from "lodash";
 import { assert } from "ts-essentials";
 import { z } from "zod";
 import type { PoolERC20 } from "../typechain-types";

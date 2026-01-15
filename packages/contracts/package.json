@@ -61,7 +61,9 @@
   "dependencies": {
     "@aztec/aztec.js": "0.86.0",
     "@aztec/bb.js": "0.84.0-nightly.20250410",
+    "@aztec/foundation": "0.86.0",
     "@aztec/merkle-tree": "^3.0.2",
+    "@aztec/stdlib": "0.86.0",
     "@hpke/core": "1.7.1",
     "@hpke/dhkem-x25519": "1.6.1",
     "@noble/curves": "^2.0.1",

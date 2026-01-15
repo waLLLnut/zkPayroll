@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LatticA Audit System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #888;
+            font-size: 1.1em;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card h2 {
+            color: #00d9ff;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #00d9ff;
+            border-radius: 2px;
+        }
+        .audit-log-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .audit-log-item:hover {
+            border-color: #00d9ff;
+            transform: translateX(5px);
+        }
+        .audit-log-item.selected {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+        .audit-log-item .header-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .audit-log-item .amount {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .audit-log-item .nullifier {
+            font-family: monospace;
+            font-size: 0.85em;
+            color: #888;
+        }
+        .audit-log-item .recipient {
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .kyc-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .kyc-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .kyc-item .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .kyc-item .info {
+            flex: 1;
+        }
+        .kyc-item .name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .kyc-item .pubkey {
+            font-family: monospace;
+            font-size: 0.8em;
+            color: #888;
+        }
+        .kyc-item.matched {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+        }
+        .kyc-item.matched .avatar {
+            background: #00ff88;
+            color: #000;
+        }
+        .btn {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result-card {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        .result-card h2 {
+            color: #00ff88;
+        }
+        .result-card .identity {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .result-card .identity-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .result-card .identity-row:last-child {
+            border-bottom: none;
+        }
+        .result-card .label {
+            color: #888;
+        }
+        .result-card .value {
+            font-family: monospace;
+            color: #00ff88;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .status-badge.encrypted {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+        }
+        .status-badge.decrypted {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #00d9ff;
+        }
+        .loading::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LatticA Audit System</h1>
+            <p>RLWE Encrypted Audit Log with Threshold Decryption</p>
+        </div>
+
+        <div class="grid">
+            <!-- Audit Logs -->
+            <div class="card">
+                <h2>Unshield Transactions (Audit Logs)</h2>
+                <div id="auditLogs">
+                    <!-- Populated by JS -->
+                </div>
+                <button class="btn" id="requestAuditBtn" disabled>Request Identity Reveal</button>
+            </div>
+
+            <!-- KYC Database -->
+            <div class="card">
+                <h2>KYC Database</h2>
+                <div class="kyc-list" id="kycList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Decryption Result -->
+        <div class="result-card hidden" id="resultCard">
+            <h2>Decryption Result</h2>
+            <div class="identity" id="identityResult">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // Demo Data (simulated from full_scenario)
+        // ============================================
+
+        // KYC Database (signature public keys mapped to identities)
+        const kycDatabase = [
+            {
+                name: "ALICE",
+                company: "ACME Corp",
+                department: "Engineering",
+                waAddress: {
+                    x: "0xcb824018393f4bd8a1b5c9e7d6f2a3b4c5d6e7f8",
+                    y: "0x1234567890abcdef1234567890abcdef12345678"
+                }
+            },
+            {
+                name: "CHARLIE",
+                company: "ACME Corp",
+                department: "Marketing",
+                waAddress: {
+                    x: "0xd9ebdaa09c4d1a265972d7ba42216699abcdef12",
+                    y: "0xabcdef1234567890abcdef1234567890abcdef12"
+                }
+            },
+            {
+                name: "DAVID",
+                company: "ACME Corp",
+                department: "Sales",
+                waAddress: {
+                    x: "0xfeb3b08b9514736b1234567890abcdef12345678",
+                    y: "0x567890abcdef1234567890abcdef1234567890ab"
+                }
+            }
+        ];
+
+        // Audit Logs (from unshield transactions)
+        const auditLogs = [
+            {
+                nullifier: "0xb5961242b3b75f197cf1a031511a9ac85ce86002",
+                amount: 300,
+                recipient: "0xAlice_External_Address",
+                timestamp: new Date().toISOString(),
+                encryptedIdentity: {
+                    c0: [/* RLWE ciphertext */],
+                    c1: [/* RLWE ciphertext */]
+                },
+                // In real system, this would be decrypted with threshold secret
+                // For demo, we store the actual identity encrypted
+                _actualIdentity: kycDatabase[0] // ALICE
+            },
+            {
+                nullifier: "0x85ab81128f7a74fb3a381c2fa5a67b3c48c4087b",
+                amount: 400,
+                recipient: "0xCharlie_External_Address",
+                timestamp: new Date().toISOString(),
+                encryptedIdentity: {
+                    c0: [/* RLWE ciphertext */],
+                    c1: [/* RLWE ciphertext */]
+                },
+                _actualIdentity: kycDatabase[1] // CHARLIE
+            },
+            {
+                nullifier: "0xbaa0ee506c688d7544ea9527c72209ae61fad65e",
+                amount: 300,
+                recipient: "0xDavid_External_Address",
+                timestamp: new Date().toISOString(),
+                encryptedIdentity: {
+                    c0: [/* RLWE ciphertext */],
+                    c1: [/* RLWE ciphertext */]
+                },
+                _actualIdentity: kycDatabase[2] // DAVID
+            }
+        ];
+
+        // Shared secret key (for demo - in real system, this would be split among nodes)
+        const sharedSecretKey = "0xlattica_demo_shared_secret_key_2024";
+
+        // State
+        let selectedLog = null;
+        let decryptedIdentity = null;
+
+        // ============================================
+        // Render Functions
+        // ============================================
+
+        function renderAuditLogs() {
+            const container = document.getElementById('auditLogs');
+            container.innerHTML = auditLogs.map((log, index) => `
+                <div class="audit-log-item" data-index="${index}">
+                    <div class="header-row">
+                        <span class="amount">${log.amount} USDC</span>
+                        <span class="status-badge encrypted">ENCRYPTED</span>
+                    </div>
+                    <div class="nullifier">Nullifier: ${log.nullifier.slice(0, 20)}...</div>
+                    <div class="recipient">To: ${log.recipient}</div>
+                </div>
+            `).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.audit-log-item').forEach(item => {
+                item.addEventListener('click', () => selectAuditLog(parseInt(item.dataset.index)));
+            });
+        }
+
+        function renderKycList(matchedIndex = -1) {
+            const container = document.getElementById('kycList');
+            container.innerHTML = kycDatabase.map((kyc, index) => `
+                <div class="kyc-item ${index === matchedIndex ? 'matched' : ''}">
+                    <div class="avatar">${kyc.name[0]}</div>
+                    <div class="info">
+                        <div class="name">${kyc.name} ${index === matchedIndex ? '- MATCHED' : ''}</div>
+                        <div class="pubkey">x: ${kyc.waAddress.x.slice(0, 20)}...</div>
+                        <div class="pubkey">${kyc.company} / ${kyc.department}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectAuditLog(index) {
+            selectedLog = index;
+            decryptedIdentity = null;
+
+            // Update UI
+            document.querySelectorAll('.audit-log-item').forEach((item, i) => {
+                item.classList.toggle('selected', i === index);
+            });
+
+            document.getElementById('requestAuditBtn').disabled = false;
+            document.getElementById('resultCard').classList.add('hidden');
+            renderKycList(-1);
+        }
+
+        // ============================================
+        // Decryption (Simulated)
+        // ============================================
+
+        async function requestIdentityReveal() {
+            if (selectedLog === null) return;
+
+            const btn = document.getElementById('requestAuditBtn');
+            btn.disabled = true;
+            btn.textContent = 'Decrypting...';
+
+            // Simulate threshold decryption delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const log = auditLogs[selectedLog];
+
+            // In real system: combine threshold shares to decrypt RLWE ciphertext
+            // For demo: just reveal the actual identity
+            decryptedIdentity = log._actualIdentity;
+
+            // Find matching KYC
+            const matchedIndex = kycDatabase.findIndex(kyc =>
+                kyc.waAddress.x === decryptedIdentity.waAddress.x
+            );
+
+            // Update UI
+            document.querySelectorAll('.audit-log-item')[selectedLog]
+                .querySelector('.status-badge')
+                .className = 'status-badge decrypted';
+            document.querySelectorAll('.audit-log-item')[selectedLog]
+                .querySelector('.status-badge')
+                .textContent = 'DECRYPTED';
+
+            // Show result
+            const resultCard = document.getElementById('resultCard');
+            resultCard.classList.remove('hidden');
+
+            document.getElementById('identityResult').innerHTML = `
+                <div class="identity-row">
+                    <span class="label">Transaction Nullifier</span>
+                    <span class="value">${log.nullifier.slice(0, 30)}...</span>
+                </div>
+                <div class="identity-row">
+                    <span class="label">Amount</span>
+                    <span class="value">${log.amount} USDC</span>
+                </div>
+                <div class="identity-row">
+                    <span class="label">Recipient Address</span>
+                    <span class="value">${log.recipient}</span>
+                </div>
+                <hr style="border-color: #333; margin: 15px 0;">
+                <div class="identity-row">
+                    <span class="label">Sender Identity (Decrypted)</span>
+                    <span class="value" style="color: #00ff88; font-weight: bold;">${decryptedIdentity.name}</span>
+                </div>
+                <div class="identity-row">
+                    <span class="label">Company</span>
+                    <span class="value">${decryptedIdentity.company}</span>
+                </div>
+                <div class="identity-row">
+                    <span class="label">Department</span>
+                    <span class="value">${decryptedIdentity.department}</span>
+                </div>
+                <div class="identity-row">
+                    <span class="label">Signature Public Key (x)</span>
+                    <span class="value">${decryptedIdentity.waAddress.x.slice(0, 25)}...</span>
+                </div>
+                <div class="identity-row">
+                    <span class="label">KYC Match</span>
+                    <span class="value" style="color: #00ff88;">VERIFIED</span>
+                </div>
+            `;
+
+            // Highlight matched KYC
+            renderKycList(matchedIndex);
+
+            btn.textContent = 'Request Identity Reveal';
+            btn.disabled = false;
+        }
+
+        // ============================================
+        // Initialize
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAuditLogs();
+            renderKycList();
+
+            document.getElementById('requestAuditBtn').addEventListener('click', requestIdentityReveal);
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import type { Fr } from "@aztec/aztec.js";
 import type { InputMap } from "@noir-lang/noir_js";
 import { ethers } from "ethers";
-import { chunk } from "lodash-es";
+import { chunk } from "lodash";
 import fs from "node:fs";
 import path from "node:path";
 import { Hex } from "ox";

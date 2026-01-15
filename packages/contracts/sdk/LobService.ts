@@ -1,4 +1,4 @@
-import { uniq } from "lodash-es";
+import { uniq } from "lodash";
 import { assert, type AsyncOrSync } from "ts-essentials";
 import { type PoolERC20 } from "../typechain-types";
 import { NoteInputStruct } from "../typechain-types/contracts/PoolERC20";

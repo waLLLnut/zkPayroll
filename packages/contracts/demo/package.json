@@ -1,7 +1,6 @@
 {
   "name": "zkpayroll-demo",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "demo": "npx tsx demo.ts",
     "demo:audit": "npx tsx audit_demo.ts",

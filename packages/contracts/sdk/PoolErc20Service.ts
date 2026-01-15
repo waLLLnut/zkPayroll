@@ -4,7 +4,7 @@ import { poseidon2Hash as aztecPoseidon2Hash } from "@aztec/foundation/crypto";
 import type { CompiledCircuit, Noir } from "@noir-lang/noir_js";
 import { utils } from "@repo/utils";
 import { ethers } from "ethers";
-import { compact, orderBy, times } from "lodash-es";
+import { compact, orderBy, times } from "lodash";
 import { assert, type AsyncOrSync } from "ts-essentials";
 import { type PoolERC20 } from "../typechain-types";
 import { EncryptionService } from "./EncryptionService";
@@ -77,9 +77,11 @@ export class PoolErc20Service {
     });
     const noteInput = await this.toNoteInput(note);
     const shieldCircuit = (await this.circuits).shield;
+    // __LatticA__: WaAddress is now {x, y} Grumpkin coordinates
+    const waCoords = note.owner.getWaCoords();
     const input = {
       tree_roots: await this.trees.getTreeRoots(),
-      owner: { inner: note.owner.address },
+      owner: { x: waCoords.x, y: waCoords.y },
       amount: await note.amount.toNoir(),
       randomness: note.randomness,
       note_hash: noteInput.noteHash,
@@ -181,22 +183,22 @@ export class PoolErc20Service {
   }: {
     secretKey: string;
     notes: Erc20Note[];
-    to?: WaAddress;
+    to?: CompleteWaAddress;
   }) {
     assert(notes.length === MAX_NOTES_TO_JOIN, "invalid notes length");
 
     const join_randomness = await getRandomness();
 
-    to ??= (
-      await CompleteWaAddress.fromSecretKey(secretKey)
-    ).address.toString();
+    // __LatticA__: to is WaAddress {x, y} Grumpkin coordinates
+    const toAddress = to ?? await CompleteWaAddress.fromSecretKey(secretKey);
+    const toWaCoords = toAddress.getWaCoords();
 
     const joinCircuit = (await this.circuits).join;
     const input = {
       tree_roots: await this.trees.getTreeRoots(),
       from_secret_key: secretKey,
       join_randomness,
-      to: { inner: to },
+      to: { x: toWaCoords.x, y: toWaCoords.y },
       notes: await Promise.all(
         notes.map((note) => this.toNoteConsumptionInputs(secretKey, note)),
       ),
@@ -240,11 +242,13 @@ export class PoolErc20Service {
 
     const to_randomness = await getRandomness();
     const change_randomness = await getRandomness();
+    // __LatticA__: to is WaAddress {x, y} Grumpkin coordinates
+    const toWaCoords = to.getWaCoords();
     const input = {
       tree_roots: await this.trees.getTreeRoots(),
       from_note_inputs: await this.toNoteConsumptionInputs(secretKey, fromNote),
       from_secret_key: secretKey,
-      to: { inner: to.address },
+      to: { x: toWaCoords.x, y: toWaCoords.y },
       amount: await amount.toNoir(),
       to_randomness,
       change_randomness,
@@ -374,8 +378,10 @@ export class Erc20Note {
   }
 
   async toNoir() {
+    // __LatticA__: owner is now WaAddress {x, y} Grumpkin coordinates
+    const waCoords = this.owner.getWaCoords();
     return {
-      owner: { inner: this.owner.address },
+      owner: { x: waCoords.x, y: waCoords.y },
       amount: await this.amount.toNoir(),
       randomness: this.randomness,
     };
