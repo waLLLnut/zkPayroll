@@ -1,23 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="757pt" height="672pt" viewBox="0.00 0.00 757.00 672.00">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 668.22)">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="786pt" height="614pt" viewBox="0.00 0.00 786.00 614.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 609.82)">
 <title>LatticA_System_Architecture</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-668.22 753,-668.22 753,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-609.82 782,-609.82 782,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_OnChain</title>
-<polygon fill="#e3f2fd" stroke="#e3f2fd" points="8,-313.1 8,-504.5 389,-504.5 389,-313.1 8,-313.1"/>
-<text xml:space="preserve" text-anchor="middle" x="198.5" y="-487.9" font-family="Times,serif" font-size="14.00" fill="#0d47a1">[On-chain Circuit] erc20_unshield</text>
-<text xml:space="preserve" text-anchor="middle" x="198.5" y="-471.1" font-family="Times,serif" font-size="14.00" fill="#0d47a1">(Identity &amp; Withdraw)</text>
+<polygon fill="#e3f2fd" stroke="#e3f2fd" points="8,-288.3 8,-462.9 389,-462.9 389,-288.3 8,-288.3"/>
+<text xml:space="preserve" text-anchor="middle" x="198.5" y="-446.3" font-family="Times,serif" font-size="14.00" fill="#0d47a1">erc20_unshield</text>
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_OffChain</title>
-<polygon fill="#fff3e0" stroke="#fff3e0" points="406,-313.1 406,-656.22 741,-656.22 741,-313.1 406,-313.1"/>
-<text xml:space="preserve" text-anchor="middle" x="573.5" y="-639.62" font-family="Times,serif" font-size="14.00" fill="#e65100">[Off-chain Circuit] rlwe_audit</text>
-<text xml:space="preserve" text-anchor="middle" x="573.5" y="-622.82" font-family="Times,serif" font-size="14.00" fill="#e65100">(RLWE Encryption)</text>
+<polygon fill="#fff3e0" stroke="#fff3e0" points="410,-288.3 410,-597.82 770,-597.82 770,-288.3 410,-288.3"/>
+<text xml:space="preserve" text-anchor="middle" x="590" y="-581.22" font-family="Times,serif" font-size="14.00" fill="#e65100">rlwe_audit</text>
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_Verify</title>
-<polygon fill="none" stroke="#666666" stroke-dasharray="5,2" points="275,-8 275,-305.1 491,-305.1 491,-8 275,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="383" y="-288.5" font-family="Times,serif" font-size="14.00">Cryptographic Verification Link</text>
+<polygon fill="none" stroke="#666666" stroke-dasharray="5,2" points="275,-8 275,-280.3 491,-280.3 491,-8 275,-8"/>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_Final</title>
@@ -25,64 +22,63 @@
 <!-- User -->
 <g id="node1" class="node">
 <title>User</title>
-<ellipse fill="#e1bee7" stroke="black" stroke-width="2" cx="305" cy="-582.82" rx="62.28" ry="24.32"/>
-<text xml:space="preserve" text-anchor="middle" x="305" y="-586.12" font-family="Sans-Serif" font-size="11.00">User Secret Key</text>
-<text xml:space="preserve" text-anchor="middle" x="305" y="-572.92" font-family="Sans-Serif" font-size="11.00">(sk ∈ Fp)</text>
+<ellipse fill="#e1bee7" stroke="black" stroke-width="2" cx="310" cy="-541.22" rx="62.28" ry="24.32"/>
+<text xml:space="preserve" text-anchor="middle" x="310" y="-544.52" font-family="Sans-Serif" font-size="11.00">User Secret Key</text>
+<text xml:space="preserve" text-anchor="middle" x="310" y="-531.32" font-family="Sans-Serif" font-size="11.00">(sk ∈ Fp)</text>
 </g>
 <!-- DeriveID -->
 <g id="node2" class="node">
 <title>DeriveID</title>
-<polygon fill="#ffffff" stroke="#0d47a1" points="368.59,-454.9 225.41,-454.9 225.41,-418.9 374.59,-418.9 374.59,-448.9 368.59,-454.9"/>
-<polyline fill="none" stroke="#0d47a1" points="368.59,-454.9 368.59,-448.9"/>
-<polyline fill="none" stroke="#0d47a1" points="374.59,-448.9 368.59,-448.9"/>
-<text xml:space="preserve" text-anchor="middle" x="300" y="-440.2" font-family="Sans-Serif" font-size="11.00">1. Derive Identity (Grumpkin)</text>
-<text xml:space="preserve" text-anchor="middle" x="300" y="-427" font-family="Sans-Serif" font-size="11.00">(x, y) = sk · G</text>
+<polygon fill="#ffffff" stroke="#0d47a1" points="374.59,-430.1 231.41,-430.1 231.41,-394.1 380.59,-394.1 380.59,-424.1 374.59,-430.1"/>
+<polyline fill="none" stroke="#0d47a1" points="374.59,-430.1 374.59,-424.1"/>
+<polyline fill="none" stroke="#0d47a1" points="380.59,-424.1 374.59,-424.1"/>
+<text xml:space="preserve" text-anchor="middle" x="306" y="-415.4" font-family="Sans-Serif" font-size="11.00">1. Derive Identity (Grumpkin)</text>
+<text xml:space="preserve" text-anchor="middle" x="306" y="-402.2" font-family="Sans-Serif" font-size="11.00">(x, y) = sk · G</text>
 </g>
 <!-- User&#45;&gt;DeriveID -->
-<g id="edge6" class="edge">
+<g id="edge5" class="edge">
 <title>User-&gt;DeriveID</title>
-<path fill="none" stroke="black" d="M305,-557.74C305,-557.74 305,-466.72 305,-466.72"/>
-<polygon fill="black" stroke="black" points="308.5,-466.72 305,-456.72 301.5,-466.72 308.5,-466.72"/>
-<text xml:space="preserve" text-anchor="middle" x="327.97" y="-521.5" font-family="Sans-Serif" font-size="10.00">Private Input</text>
+<path fill="none" stroke="black" d="M310,-516.02C310,-516.02 310,-442.07 310,-442.07"/>
+<polygon fill="black" stroke="black" points="313.5,-442.07 310,-432.07 306.5,-442.07 313.5,-442.07"/>
+<text xml:space="preserve" text-anchor="middle" x="334.97" y="-479.9" font-family="Sans-Serif" font-size="10.00">Private Input</text>
 </g>
 <!-- RLWEMath -->
 <g id="node7" class="node">
 <title>RLWEMath</title>
-<polygon fill="#ffcc80" stroke="#e65100" points="596.1,-460.7 417.9,-460.7 417.9,-456.7 413.9,-456.7 413.9,-452.7 417.9,-452.7 417.9,-421.1 413.9,-421.1 413.9,-417.1 417.9,-417.1 417.9,-413.1 596.1,-413.1 596.1,-460.7"/>
-<polyline fill="none" stroke="#e65100" points="417.9,-456.7 421.9,-456.7 421.9,-452.7 417.9,-452.7"/>
-<polyline fill="none" stroke="#e65100" points="417.9,-421.1 421.9,-421.1 421.9,-417.1 417.9,-417.1"/>
-<text xml:space="preserve" text-anchor="middle" x="507" y="-446.8" font-family="Sans-Serif" font-size="11.00">2. RLWE Encryption (Linear Comb)</text>
-<text xml:space="preserve" text-anchor="middle" x="507" y="-433.6" font-family="Sans-Serif" font-size="11.00">c₀[i] = ⟨A[i], r⟩ + e₁[i] + m[i]</text>
-<text xml:space="preserve" text-anchor="middle" x="507" y="-420.4" font-family="Sans-Serif" font-size="11.00">c₁[j] = ⟨B[j], r⟩ + e₂[j]</text>
+<polygon fill="#ffcc80" stroke="#e65100" points="626,-435.9 424,-435.9 424,-431.9 420,-431.9 420,-427.9 424,-427.9 424,-396.3 420,-396.3 420,-392.3 424,-392.3 424,-388.3 626,-388.3 626,-435.9"/>
+<polyline fill="none" stroke="#e65100" points="424,-431.9 428,-431.9 428,-427.9 424,-427.9"/>
+<polyline fill="none" stroke="#e65100" points="424,-396.3 428,-396.3 428,-392.3 424,-392.3"/>
+<text xml:space="preserve" text-anchor="middle" x="525" y="-422" font-family="Sans-Serif" font-size="11.00">2. RLWE Encryption &amp; Projection</text>
+<text xml:space="preserve" text-anchor="middle" x="525" y="-408.8" font-family="Sans-Serif" font-size="11.00">c_0 = π₃₂ [ b(X)·r(X) + e₁(X) + m(X) ]</text>
+<text xml:space="preserve" text-anchor="middle" x="525" y="-395.6" font-family="Sans-Serif" font-size="11.00">c₁(X) = a(X)·r(X) + e₂(X)</text>
 </g>
 <!-- User&#45;&gt;RLWEMath -->
-<g id="edge7" class="edge">
+<g id="edge6" class="edge">
 <title>User-&gt;RLWEMath</title>
-<path fill="none" stroke="black" d="M368.25,-583C381.75,-583 392.03,-583 392.03,-583 392.03,-583 392.03,-437 392.03,-437 392.03,-437 406.03,-437 406.03,-437"/>
-<polygon fill="black" stroke="black" points="406.03,-440.5 416.03,-437 406.03,-433.5 406.03,-440.5"/>
-<text xml:space="preserve" text-anchor="middle" x="440.77" y="-527.5" font-family="Sans-Serif" font-size="10.00">Private Input</text>
-<text xml:space="preserve" text-anchor="middle" x="440.77" y="-515.5" font-family="Sans-Serif" font-size="10.00">(x,y encoded to m)</text>
+<path fill="none" stroke="black" d="M373.01,-541C384.02,-541 392.03,-541 392.03,-541 392.03,-541 392.03,-412 392.03,-412 392.03,-412 412.03,-412 412.03,-412"/>
+<polygon fill="black" stroke="black" points="412.03,-415.5 422.03,-412 412.03,-408.5 412.03,-415.5"/>
+<text xml:space="preserve" text-anchor="middle" x="452.77" y="-485.9" font-family="Sans-Serif" font-size="10.00">Private Input</text>
+<text xml:space="preserve" text-anchor="middle" x="452.77" y="-473.9" font-family="Sans-Serif" font-size="10.00">(x,y encoded to m)</text>
 </g>
-<!-- NullifierCalc -->
-<g id="node3" class="node">
-<title>NullifierCalc</title>
-<path fill="#ffffff" stroke="#0d47a1" d="M185.84,-357.1C185.84,-357.1 28.16,-357.1 28.16,-357.1 22.16,-357.1 16.16,-351.1 16.16,-345.1 16.16,-345.1 16.16,-333.1 16.16,-333.1 16.16,-327.1 22.16,-321.1 28.16,-321.1 28.16,-321.1 185.84,-321.1 185.84,-321.1 191.84,-321.1 197.84,-327.1 197.84,-333.1 197.84,-333.1 197.84,-345.1 197.84,-345.1 197.84,-351.1 191.84,-357.1 185.84,-357.1"/>
-<text xml:space="preserve" text-anchor="middle" x="107" y="-342.4" font-family="Sans-Serif" font-size="11.00">2. Nullifier</text>
-<text xml:space="preserve" text-anchor="middle" x="107" y="-329.2" font-family="Sans-Serif" font-size="11.00">nullifier = Poseidon(2, note_hash, sk)</text>
-</g>
-<!-- DeriveID&#45;&gt;NullifierCalc -->
 <!-- WaCommit -->
 <g id="node4" class="node">
 <title>WaCommit</title>
-<path fill="#ffffff" stroke="#0d47a1" d="M369.07,-357.1C369.07,-357.1 252.93,-357.1 252.93,-357.1 246.93,-357.1 240.93,-351.1 240.93,-345.1 240.93,-345.1 240.93,-333.1 240.93,-333.1 240.93,-327.1 246.93,-321.1 252.93,-321.1 252.93,-321.1 369.07,-321.1 369.07,-321.1 375.07,-321.1 381.07,-327.1 381.07,-333.1 381.07,-333.1 381.07,-345.1 381.07,-345.1 381.07,-351.1 375.07,-357.1 369.07,-357.1"/>
-<text xml:space="preserve" text-anchor="middle" x="311" y="-342.4" font-family="Sans-Serif" font-size="11.00">3. WaCommitment</text>
-<text xml:space="preserve" text-anchor="middle" x="311" y="-329.2" font-family="Sans-Serif" font-size="11.00">wa_com = Poseidon(1, x, y)</text>
+<path fill="#ffffff" stroke="#0d47a1" d="M369.07,-332.3C369.07,-332.3 252.93,-332.3 252.93,-332.3 246.93,-332.3 240.93,-326.3 240.93,-320.3 240.93,-320.3 240.93,-308.3 240.93,-308.3 240.93,-302.3 246.93,-296.3 252.93,-296.3 252.93,-296.3 369.07,-296.3 369.07,-296.3 375.07,-296.3 381.07,-302.3 381.07,-308.3 381.07,-308.3 381.07,-320.3 381.07,-320.3 381.07,-326.3 375.07,-332.3 369.07,-332.3"/>
+<text xml:space="preserve" text-anchor="middle" x="311" y="-317.6" font-family="Sans-Serif" font-size="11.00">3. WaCommitment</text>
+<text xml:space="preserve" text-anchor="middle" x="311" y="-304.4" font-family="Sans-Serif" font-size="11.00">wa_com = Poseidon(1, x, y)</text>
 </g>
 <!-- DeriveID&#45;&gt;WaCommit -->
 <g id="edge1" class="edge">
 <title>DeriveID-&gt;WaCommit</title>
-<path fill="none" stroke="black" d="M307.76,-418.5C307.76,-418.5 307.76,-368.93 307.76,-368.93"/>
-<polygon fill="black" stroke="black" points="311.26,-368.93 307.76,-358.93 304.26,-368.93 311.26,-368.93"/>
+<path fill="none" stroke="black" d="M310.76,-393.7C310.76,-393.7 310.76,-344.13 310.76,-344.13"/>
+<polygon fill="black" stroke="black" points="314.26,-344.13 310.76,-334.13 307.26,-344.13 314.26,-344.13"/>
+</g>
+<!-- NullifierCalc -->
+<g id="node3" class="node">
+<title>NullifierCalc</title>
+<path fill="#ffffff" stroke="#0d47a1" d="M185.84,-332.3C185.84,-332.3 28.16,-332.3 28.16,-332.3 22.16,-332.3 16.16,-326.3 16.16,-320.3 16.16,-320.3 16.16,-308.3 16.16,-308.3 16.16,-302.3 22.16,-296.3 28.16,-296.3 28.16,-296.3 185.84,-296.3 185.84,-296.3 191.84,-296.3 197.84,-302.3 197.84,-308.3 197.84,-308.3 197.84,-320.3 197.84,-320.3 197.84,-326.3 191.84,-332.3 185.84,-332.3"/>
+<text xml:space="preserve" text-anchor="middle" x="107" y="-317.6" font-family="Sans-Serif" font-size="11.00">2. Nullifier</text>
+<text xml:space="preserve" text-anchor="middle" x="107" y="-304.4" font-family="Sans-Serif" font-size="11.00">nullifier = Poseidon(2, note_hash, sk)</text>
 </g>
 <!-- Out_OnChain -->
 <g id="node9" class="node">
@@ -91,59 +87,58 @@
 <text xml:space="preserve" text-anchor="middle" x="310.63" y="-171.75" font-family="Sans-Serif" font-size="11.00">wa_com</text>
 <polyline fill="none" stroke="black" points="284,-164.45 337.26,-164.45"/>
 <text xml:space="preserve" text-anchor="middle" x="310.63" y="-150.55" font-family="Sans-Serif" font-size="11.00">nullifier</text>
-<text xml:space="preserve" text-anchor="middle" x="250.24" y="-189.45" font-family="Sans-Serif" font-size="11.00">From On-chain</text>
 </g>
 <!-- NullifierCalc&#45;&gt;Out_OnChain -->
-<g id="edge9" class="edge">
+<g id="edge8" class="edge">
 <title>NullifierCalc-&gt;Out_OnChain:null</title>
-<path fill="none" stroke="black" d="M107,-320.69C107,-275.74 107,-164 107,-164 107,-164 272.08,-164 272.08,-164"/>
+<path fill="none" stroke="black" d="M107,-295.87C107,-255.74 107,-164 107,-164 107,-164 272.08,-164 272.08,-164"/>
 <polygon fill="black" stroke="black" points="272.08,-167.5 282.08,-164 272.08,-160.5 272.08,-167.5"/>
 </g>
 <!-- WaCommit&#45;&gt;Out_OnChain -->
-<g id="edge8" class="edge">
+<g id="edge7" class="edge">
 <title>WaCommit-&gt;Out_OnChain:wa</title>
-<path fill="none" stroke="black" d="M311,-320.6C311,-320.6 311,-197.5 311,-197.5"/>
-<polygon fill="black" stroke="black" points="314.5,-197.5 311,-187.5 307.5,-197.5 314.5,-197.5"/>
+<path fill="none" stroke="black" d="M311,-295.81C311,-295.81 311,-197.48 311,-197.48"/>
+<polygon fill="black" stroke="black" points="314.5,-197.48 311,-187.48 307.5,-197.48 314.5,-197.48"/>
 </g>
 <!-- Params -->
 <g id="node5" class="node">
 <title>Params</title>
-<polygon fill="#ffe0b2" stroke="#e65100" points="559.62,-606.62 556.62,-610.62 535.62,-610.62 532.62,-606.62 414.38,-606.62 414.38,-559.02 559.62,-559.02 559.62,-606.62"/>
-<text xml:space="preserve" text-anchor="middle" x="487" y="-592.72" font-family="Sans-Serif" font-size="11.00">RLWE Params</text>
-<text xml:space="preserve" text-anchor="middle" x="487" y="-579.52" font-family="Sans-Serif" font-size="11.00">N=1024, Q=167772161</text>
-<text xml:space="preserve" text-anchor="middle" x="487" y="-566.32" font-family="Sans-Serif" font-size="11.00">Constants: A, B (Public Key)</text>
+<polygon fill="#ffe0b2" stroke="#e65100" points="588.44,-565.02 585.44,-569.02 564.44,-569.02 561.44,-565.02 417.56,-565.02 417.56,-517.42 588.44,-517.42 588.44,-565.02"/>
+<text xml:space="preserve" text-anchor="middle" x="503" y="-551.12" font-family="Sans-Serif" font-size="11.00">RLWE Params</text>
+<text xml:space="preserve" text-anchor="middle" x="503" y="-537.92" font-family="Sans-Serif" font-size="11.00">N=1024, Q=167772161</text>
+<text xml:space="preserve" text-anchor="middle" x="503" y="-524.72" font-family="Sans-Serif" font-size="11.00">Constants: a(X), b(X) (Public Key)</text>
 </g>
 <!-- Params&#45;&gt;RLWEMath -->
-<g id="edge3" class="edge">
+<g id="edge2" class="edge">
 <title>Params-&gt;RLWEMath</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M488.76,-558.73C488.76,-558.73 488.76,-472.55 488.76,-472.55"/>
-<polygon fill="black" stroke="black" points="492.26,-472.55 488.76,-462.55 485.26,-472.55 492.26,-472.55"/>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M506.22,-516.94C506.22,-516.94 506.22,-447.79 506.22,-447.79"/>
+<polygon fill="black" stroke="black" points="509.72,-447.79 506.22,-437.79 502.72,-447.79 509.72,-447.79"/>
 </g>
 <!-- NoiseCheck -->
 <g id="node6" class="node">
 <title>NoiseCheck</title>
-<path fill="#ffffff" stroke="#e65100" d="M721.12,-600.82C721.12,-600.82 614.88,-600.82 614.88,-600.82 608.88,-600.82 602.88,-594.82 602.88,-588.82 602.88,-588.82 602.88,-576.82 602.88,-576.82 602.88,-570.82 608.88,-564.82 614.88,-564.82 614.88,-564.82 721.12,-564.82 721.12,-564.82 727.12,-564.82 733.12,-570.82 733.12,-576.82 733.12,-576.82 733.12,-588.82 733.12,-588.82 733.12,-594.82 727.12,-600.82 721.12,-600.82"/>
-<text xml:space="preserve" text-anchor="middle" x="668" y="-586.12" font-family="Sans-Serif" font-size="11.00">1. Range Check (Lookup)</text>
-<text xml:space="preserve" text-anchor="middle" x="668" y="-572.92" font-family="Sans-Serif" font-size="11.00">r, e₁, e₂ ∈ [-128, 127]</text>
+<path fill="#ffffff" stroke="#e65100" d="M750.12,-559.22C750.12,-559.22 643.88,-559.22 643.88,-559.22 637.88,-559.22 631.88,-553.22 631.88,-547.22 631.88,-547.22 631.88,-535.22 631.88,-535.22 631.88,-529.22 637.88,-523.22 643.88,-523.22 643.88,-523.22 750.12,-523.22 750.12,-523.22 756.12,-523.22 762.12,-529.22 762.12,-535.22 762.12,-535.22 762.12,-547.22 762.12,-547.22 762.12,-553.22 756.12,-559.22 750.12,-559.22"/>
+<text xml:space="preserve" text-anchor="middle" x="697" y="-544.52" font-family="Sans-Serif" font-size="11.00">1. Range Check (Lookup)</text>
+<text xml:space="preserve" text-anchor="middle" x="697" y="-531.32" font-family="Sans-Serif" font-size="11.00">r, e₁, e₂ ∈ [-128, 127]</text>
 </g>
 <!-- NoiseCheck&#45;&gt;RLWEMath -->
-<g id="edge4" class="edge">
+<g id="edge3" class="edge">
 <title>NoiseCheck-&gt;RLWEMath</title>
-<path fill="none" stroke="black" d="M602.49,-583C588.51,-583 577.86,-583 577.86,-583 577.86,-583 577.86,-472.54 577.86,-472.54"/>
-<polygon fill="black" stroke="black" points="581.36,-472.54 577.86,-462.54 574.36,-472.54 581.36,-472.54"/>
+<path fill="none" stroke="black" d="M631.75,-541C617.83,-541 607.22,-541 607.22,-541 607.22,-541 607.22,-447.86 607.22,-447.86"/>
+<polygon fill="black" stroke="black" points="610.72,-447.86 607.22,-437.86 603.72,-447.86 610.72,-447.86"/>
 </g>
 <!-- CTCommit -->
 <g id="node8" class="node">
 <title>CTCommit</title>
-<path fill="#ffffff" stroke="#e65100" d="M669.02,-357.1C669.02,-357.1 522.98,-357.1 522.98,-357.1 516.98,-357.1 510.98,-351.1 510.98,-345.1 510.98,-345.1 510.98,-333.1 510.98,-333.1 510.98,-327.1 516.98,-321.1 522.98,-321.1 522.98,-321.1 669.02,-321.1 669.02,-321.1 675.02,-321.1 681.02,-327.1 681.02,-333.1 681.02,-333.1 681.02,-345.1 681.02,-345.1 681.02,-351.1 675.02,-357.1 669.02,-357.1"/>
-<text xml:space="preserve" text-anchor="middle" x="596" y="-342.4" font-family="Sans-Serif" font-size="11.00">3. Ciphertext Commitment</text>
-<text xml:space="preserve" text-anchor="middle" x="596" y="-329.2" font-family="Sans-Serif" font-size="11.00">ct_com = Poseidon(H(c₀), H(c₁))</text>
+<path fill="#ffffff" stroke="#e65100" d="M688.65,-332.3C688.65,-332.3 523.35,-332.3 523.35,-332.3 517.35,-332.3 511.35,-326.3 511.35,-320.3 511.35,-320.3 511.35,-308.3 511.35,-308.3 511.35,-302.3 517.35,-296.3 523.35,-296.3 523.35,-296.3 688.65,-296.3 688.65,-296.3 694.65,-296.3 700.65,-302.3 700.65,-308.3 700.65,-308.3 700.65,-320.3 700.65,-320.3 700.65,-326.3 694.65,-332.3 688.65,-332.3"/>
+<text xml:space="preserve" text-anchor="middle" x="606" y="-317.6" font-family="Sans-Serif" font-size="11.00">3. Ciphertext Commitment</text>
+<text xml:space="preserve" text-anchor="middle" x="606" y="-304.4" font-family="Sans-Serif" font-size="11.00">ct_com = Poseidon(H(c_audit), H(c₁))</text>
 </g>
 <!-- RLWEMath&#45;&gt;CTCommit -->
-<g id="edge5" class="edge">
+<g id="edge4" class="edge">
 <title>RLWEMath-&gt;CTCommit</title>
-<path fill="none" stroke="black" d="M553.54,-412.72C553.54,-412.72 553.54,-368.99 553.54,-368.99"/>
-<polygon fill="black" stroke="black" points="557.04,-368.99 553.54,-358.99 550.04,-368.99 557.04,-368.99"/>
+<path fill="none" stroke="black" d="M568.68,-387.92C568.68,-387.92 568.68,-344.19 568.68,-344.19"/>
+<polygon fill="black" stroke="black" points="572.18,-344.19 568.68,-334.19 565.18,-344.19 572.18,-344.19"/>
 </g>
 <!-- Out_OffChain -->
 <g id="node10" class="node">
@@ -152,28 +147,27 @@
 <text xml:space="preserve" text-anchor="middle" x="429.63" y="-257.9" font-family="Sans-Serif" font-size="11.00">wa_com</text>
 <polyline fill="none" stroke="black" points="403,-250.6 456.26,-250.6"/>
 <text xml:space="preserve" text-anchor="middle" x="429.63" y="-236.7" font-family="Sans-Serif" font-size="11.00">nullifier</text>
-<text xml:space="preserve" text-anchor="middle" x="368.33" y="-232.2" font-family="Sans-Serif" font-size="11.00">From Off-chain</text>
 </g>
 <!-- RLWEMath&#45;&gt;Out_OffChain -->
-<g id="edge10" class="edge">
+<g id="edge9" class="edge">
 <title>RLWEMath-&gt;Out_OffChain:wa</title>
-<path fill="none" stroke="black" stroke-dasharray="1,5" d="M437.45,-412.84C437.45,-412.84 437.45,-283.78 437.45,-283.78"/>
-<polygon fill="black" stroke="black" points="440.95,-283.78 437.45,-273.78 433.95,-283.78 440.95,-283.78"/>
-<text xml:space="preserve" text-anchor="middle" x="482.51" y="-382.1" font-family="Sans-Serif" font-size="10.00">Implicit (Derived)</text>
+<path fill="none" stroke="black" stroke-dasharray="1,5" d="M440.5,-387.86C440.5,-387.86 440.5,-283.46 440.5,-283.46"/>
+<polygon fill="black" stroke="black" points="444,-283.46 440.5,-273.46 437,-283.46 444,-283.46"/>
+<text xml:space="preserve" text-anchor="middle" x="482.51" y="-357.3" font-family="Sans-Serif" font-size="10.00">Implicit (Derived)</text>
 </g>
 <!-- AuditLog -->
 <g id="node12" class="node">
 <title>AuditLog</title>
-<path fill="#dcedc8" stroke="black" d="M655.17,-183.8C655.17,-186.17 628.65,-188.1 596,-188.1 563.35,-188.1 536.83,-186.17 536.83,-183.8 536.83,-183.8 536.83,-145.1 536.83,-145.1 536.83,-142.73 563.35,-140.8 596,-140.8 628.65,-140.8 655.17,-142.73 655.17,-145.1 655.17,-145.1 655.17,-183.8 655.17,-183.8"/>
-<path fill="none" stroke="black" d="M655.17,-183.8C655.17,-181.43 628.65,-179.5 596,-179.5 563.35,-179.5 536.83,-181.43 536.83,-183.8"/>
-<text xml:space="preserve" text-anchor="middle" x="596" y="-167.75" font-family="Sans-Serif" font-size="11.00">AuditLog Contract</text>
-<text xml:space="preserve" text-anchor="middle" x="596" y="-154.55" font-family="Sans-Serif" font-size="11.00">Stores: ct_commitment</text>
+<path fill="#dcedc8" stroke="black" d="M665.17,-183.8C665.17,-186.17 638.65,-188.1 606,-188.1 573.35,-188.1 546.83,-186.17 546.83,-183.8 546.83,-183.8 546.83,-145.1 546.83,-145.1 546.83,-142.73 573.35,-140.8 606,-140.8 638.65,-140.8 665.17,-142.73 665.17,-145.1 665.17,-145.1 665.17,-183.8 665.17,-183.8"/>
+<path fill="none" stroke="black" d="M665.17,-183.8C665.17,-181.43 638.65,-179.5 606,-179.5 573.35,-179.5 546.83,-181.43 546.83,-183.8"/>
+<text xml:space="preserve" text-anchor="middle" x="606" y="-167.75" font-family="Sans-Serif" font-size="11.00">AuditLog Contract</text>
+<text xml:space="preserve" text-anchor="middle" x="606" y="-154.55" font-family="Sans-Serif" font-size="11.00">Stores: ct_commitment</text>
 </g>
 <!-- CTCommit&#45;&gt;AuditLog -->
-<g id="edge11" class="edge">
+<g id="edge10" class="edge">
 <title>CTCommit-&gt;AuditLog</title>
-<path fill="none" stroke="black" d="M596,-320.74C596,-320.74 596,-199.89 596,-199.89"/>
-<polygon fill="black" stroke="black" points="599.5,-199.89 596,-189.89 592.5,-199.89 599.5,-199.89"/>
+<path fill="none" stroke="black" d="M606,-295.93C606,-295.93 606,-199.94 606,-199.94"/>
+<polygon fill="black" stroke="black" points="609.5,-199.94 606,-189.94 602.5,-199.94 609.5,-199.94"/>
 </g>
 <!-- Match -->
 <g id="node11" class="node">
@@ -183,31 +177,31 @@
 <text xml:space="preserve" text-anchor="middle" x="383" y="-40.5" font-family="Sans-Serif" font-size="11.00">(Constraint Check)</text>
 </g>
 <!-- Out_OnChain&#45;&gt;Match -->
-<g id="edge12" class="edge">
+<g id="edge11" class="edge">
 <title>Out_OnChain:wa-&gt;Match</title>
 <path fill="none" stroke="#c62828" stroke-width="2" d="M311,-163.99C311,-140.04 311,-83.67 311,-60.56"/>
 </g>
 <!-- Out_OffChain&#45;&gt;Match -->
-<g id="edge13" class="edge">
+<g id="edge12" class="edge">
 <title>Out_OffChain:wa-&gt;Match</title>
 <path fill="none" stroke="#c62828" stroke-width="2" d="M430,-250.16C430,-216.02 430,-111.87 430,-69.06"/>
 </g>
 <!-- Threshold -->
 <g id="node13" class="node">
 <title>Threshold</title>
-<polygon fill="#fff9c4" stroke="black" points="672.2,-74.2 527.8,-74.2 527.8,-26.6 678.2,-26.6 678.2,-68.2 672.2,-74.2"/>
-<polyline fill="none" stroke="black" points="672.2,-74.2 672.2,-68.2"/>
-<polyline fill="none" stroke="black" points="678.2,-68.2 672.2,-68.2"/>
-<text xml:space="preserve" text-anchor="middle" x="603" y="-60.3" font-family="Sans-Serif" font-size="11.00">Threshold Decryption (2-of-3)</text>
-<text xml:space="preserve" text-anchor="middle" x="603" y="-47.1" font-family="Sans-Serif" font-size="11.00">Decrypt(c₀, c₁) → (x, y)</text>
-<text xml:space="preserve" text-anchor="middle" x="603" y="-33.9" font-family="Sans-Serif" font-size="11.00">m' = c₀ - (d₁ + d₂)</text>
+<polygon fill="#fff9c4" stroke="black" points="681.66,-74.2 528.34,-74.2 528.34,-26.6 687.66,-26.6 687.66,-68.2 681.66,-74.2"/>
+<polyline fill="none" stroke="black" points="681.66,-74.2 681.66,-68.2"/>
+<polyline fill="none" stroke="black" points="687.66,-68.2 681.66,-68.2"/>
+<text xml:space="preserve" text-anchor="middle" x="608" y="-60.3" font-family="Sans-Serif" font-size="11.00">Threshold Decryption (2-of-3)</text>
+<text xml:space="preserve" text-anchor="middle" x="608" y="-47.1" font-family="Sans-Serif" font-size="11.00">Decrypt(c_audit, c₁) → (x, y)</text>
+<text xml:space="preserve" text-anchor="middle" x="608" y="-33.9" font-family="Sans-Serif" font-size="11.00">m' = c_audit - (d₁ + d₂) mod Q</text>
 </g>
 <!-- AuditLog&#45;&gt;Threshold -->
-<g id="edge14" class="edge">
+<g id="edge13" class="edge">
 <title>AuditLog-&gt;Threshold</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M596,-140.54C596,-140.54 596,-86.18 596,-86.18"/>
-<polygon fill="black" stroke="black" points="599.5,-86.18 596,-76.18 592.5,-86.18 599.5,-86.18"/>
-<text xml:space="preserve" text-anchor="middle" x="637.11" y="-109.8" font-family="Sans-Serif" font-size="10.00">Upon Audit Request</text>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M606,-140.54C606,-140.54 606,-86.18 606,-86.18"/>
+<polygon fill="black" stroke="black" points="609.5,-86.18 606,-76.18 602.5,-86.18 609.5,-86.18"/>
+<text xml:space="preserve" text-anchor="middle" x="647.11" y="-109.8" font-family="Sans-Serif" font-size="10.00">Upon Audit Request</text>
 </g>
 </g>
 </svg>
