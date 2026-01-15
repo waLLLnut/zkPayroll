@@ -14,12 +14,17 @@ const deploy: DeployFunction = async ({
   const { deployer } = await safeGetNamedAccounts({ deployer: true });
 
   async function deployVerifier(name: string, circuitName: string) {
-    return await deployments.deploy(name, {
+    const result = await deployments.deploy(name, {
       from: deployer,
       log: true,
       args: [],
       contract: `noir/target/${circuitName}.sol:HonkVerifier`,
     });
+    // Wait a bit between deployments to avoid nonce issues on Mantle Sepolia
+    if (result.newlyDeployed) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    return result;
   }
   const shieldVerifier = await deployVerifier(
     "Erc20ShieldVerifier",

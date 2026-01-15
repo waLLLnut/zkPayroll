@@ -6,6 +6,14 @@ Mezcal (Nahuatl: mexcalli - agave booze) - on-chain dark pool implementation usi
 
 The code is highly experimental. The core code is located in `packages/contracts`.
 
+> **Note**: This repository is a fork of the original Mezcal dark pool implementation. The zkPayroll demo below is built on top of the original dark pool infrastructure.
+
+## zkPayroll
+
+This repository includes a zero-knowledge payroll demo implementation built on top of the original Mezcal dark pool infrastructure. The demo showcases how the shielded pool technology can be applied to private payroll payments on Mantle Network.
+
+See [zkPayroll.md](./zkPayroll.md) for documentation.
+
 ## Install coSnarks
 
 ```sh

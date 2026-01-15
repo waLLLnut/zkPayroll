@@ -1,26 +1,37 @@
 #!/usr/bin/env tsx
 /**
- * Mantle Sepolia BOB Payroll 시나리오 테스트
+ * Mantle Sepolia BOB Payroll Scenario Test
+ *
+ * Scenario:
+ * 1. BOB shields tokens into the shielded pool (encryption)
+ * 2. BOB transfers to 3 recipients (ALICE, CHARLIE, DAVID)
+ * 3. All 3 recipients unshield their tokens
+ *    - Each unshield transaction immediately transfers tokens (PoolERC20.sol unshield function)
+ *    - Rollup only updates the tree, token transfers are already completed
+ *
+ * Future Improvements:
+ * - Remove immediate transfer from unshield and implement batch transfer in rollup
+ * - This will allow 3 unshield transactions to be bundled in a single rollup and processed in one block
  */
 
 import { expect } from "chai";
 import { ethers, noir, typedDeployments } from "hardhat";
 import { sdk } from "../sdk";
 import { createBackendSdk } from "../sdk/backendSdk";
-import { parseUnits } from "../shared/utils";
+import { parseUnits, formatUnits } from "../shared/utils";
 import { MockERC20__factory, PoolERC20__factory } from "../typechain-types";
 
-// Unshield 받을 주소들
+// Recipient addresses for unshield operations
 const ALICE_ADDRESS = "0x3D3AB5dA5bD119bF02AD0805c9ECFAc4128cFF8B";
 const CHARLIE_ADDRESS = "0x997006319a1f8d98068Ac0bc39FEfacF7F728DcE";
 const DAVID_ADDRESS = "0x7A98B203A1c8cE832057a6Cbf28fB2967723f20f";
 
 async function main() {
-  console.log("🚀 Mantle Sepolia BOB Payroll 시나리오 테스트 시작\n");
+  console.log("Mantle Sepolia BOB Payroll Scenario Test Started\n");
 
-  // 배포된 컨트랙트 사용
+  // Use deployed contracts
   const [deployer] = await ethers.getSigners();
-  console.log(`📦 Deployer: ${await deployer.getAddress()}`);
+  console.log(`Deployer: ${await deployer.getAddress()}`);
 
   const poolDeployment = await typedDeployments.get("PoolERC20");
   const pool = PoolERC20__factory.connect(poolDeployment.address, deployer);
@@ -30,7 +41,7 @@ async function main() {
   const usdc = MockERC20__factory.connect(usdcDeployment.address, deployer);
   console.log(`   MockUSDC: ${usdcDeployment.address}\n`);
 
-  // USDC 설정
+  // USDC configuration
   const balance = await usdc.balanceOf(deployer);
   console.log(`   Deployer USDC balance: ${balance.toString()}`);
   if (balance < 10000n) {
@@ -38,23 +49,23 @@ async function main() {
     await usdc.mintForTests(deployer, await parseUnits(usdc, "1000000"));
   }
   await usdc.connect(deployer).approve(pool, ethers.MaxUint256);
-  console.log("✅ 컨트랙트 연결 완료\n");
+  console.log("Contract connection completed\n");
 
   const coreSdk = sdk.createCoreSdk(pool);
-  // Mantle Sepolia eth_getLogs는 10,000 블록 제한
-  // 배포 블록을 자동으로 가져오거나, 최근 10,000 블록 내에서 시작
+  // Mantle Sepolia eth_getLogs has 10,000 block limit
+  // Automatically get deployment block or start from last 10,000 blocks
   let DEPLOYMENT_BLOCK: number | undefined;
   try {
     const poolDeploymentInfo = await typedDeployments.get("PoolERC20");
     if (poolDeploymentInfo.receipt?.blockNumber) {
       DEPLOYMENT_BLOCK = poolDeploymentInfo.receipt.blockNumber;
-      console.log(`   📍 배포 블록: ${DEPLOYMENT_BLOCK}`);
+      console.log(`   Deployment block: ${DEPLOYMENT_BLOCK}`);
     }
   } catch {
-    // 배포 정보를 가져올 수 없으면 현재 블록에서 10,000 블록 전부터 시작
+    // If deployment info cannot be retrieved, start from current block - 10,000
     const currentBlock = await ethers.provider.getBlockNumber();
     DEPLOYMENT_BLOCK = Math.max(0, currentBlock - 10000);
-    console.log(`   ⚠️ 배포 블록을 찾을 수 없어 현재 블록 - 10,000 (${DEPLOYMENT_BLOCK})부터 시작`);
+    console.log(`   Warning: Could not find deployment block, starting from current block - 10,000 (${DEPLOYMENT_BLOCK})`);
   }
   const trees = new sdk.TreesService(pool, { fromBlock: DEPLOYMENT_BLOCK });
   const interfaceSdk = sdk.createInterfaceSdk(coreSdk, trees, {
@@ -74,152 +85,204 @@ async function main() {
   const charlieSecretKey = "0x038c0439a42280637b202fd2f0d25d6e8e3c11908eab966a6d85bd6797eed5d5";
   const davidSecretKey = "0x048c0439a42280637b202fd2f0d25d6e8e3c11908eab966a6d85bd6797eed5d5";
 
-  const payrollAmount = 1000n;
-  const aliceSalary = 300n;
-  const charlieSalary = 400n;
-  const davidSalary = 300n;
+  // Amounts in human-readable format (for logging)
+  const payrollAmountDisplay = 1000;
+  const aliceSalaryDisplay = 300;
+  const charlieSalaryDisplay = 400;
+  const davidSalaryDisplay = 300;
+
+  // Convert to token units with decimals
+  const payrollAmount = await parseUnits(usdc, payrollAmountDisplay.toString());
+  const aliceSalary = await parseUnits(usdc, aliceSalaryDisplay.toString());
+  const charlieSalary = await parseUnits(usdc, charlieSalaryDisplay.toString());
+  const davidSalary = await parseUnits(usdc, davidSalaryDisplay.toString());
 
   // Step 1: Shield
-  console.log("💰 Step 1: BOB이 토큰을 shielded pool에 shield");
-  console.log(`   - Shield 금액: ${payrollAmount} USDC`);
+  console.log("Step 1: BOB shields tokens into the shielded pool");
+  console.log(`   - Shield amount: ${payrollAmountDisplay} USDC`);
   await interfaceSdk.poolErc20.shield({
     account: deployer,
     token: usdc,
     amount: payrollAmount,
     secretKey: bobSecretKey,
   });
-  console.log("   ✅ Shield 완료\n");
+  console.log("   Shield completed\n");
 
   // Step 2: Shield rollup
-  console.log("🔄 Step 2: Shield rollup 처리");
+  console.log("Step 2: Shield rollup processing");
   const shieldRollupTx = await backendSdk.rollup.rollup();
   const shieldRollupReceipt = await shieldRollupTx.wait();
-  console.log(`   ✅ Rollup 완료 - 트랜잭션 해시: ${shieldRollupTx.hash}`);
-  console.log(`   ✅ Gas 사용량: ${shieldRollupReceipt?.gasUsed?.toString()}\n`);
+  console.log(`   Rollup completed - Transaction hash: ${shieldRollupTx.hash}`);
+  console.log(`   Gas used: ${shieldRollupReceipt?.gasUsed?.toString()}\n`);
 
   const bobBalanceAfterShield = await interfaceSdk.poolErc20.balanceOf(usdc, bobSecretKey);
-  console.log(`   ✅ BOB의 shielded balance: ${bobBalanceAfterShield} USDC\n`);
+  const bobBalanceFormatted = await formatUnits(usdc, bobBalanceAfterShield);
+  console.log(`   BOB's shielded balance: ${bobBalanceFormatted} USDC\n`);
 
   // Step 3: Transfers
-  console.log("💸 Step 3: BOB이 3명에게 Transfer");
+  console.log("Step 3: BOB transfers to 3 recipients");
   const bobNotes = await interfaceSdk.poolErc20.getBalanceNotesOf(usdc, bobSecretKey);
+  expect(bobNotes.length).to.be.greaterThan(0);
+
+  // Helper to find a note with sufficient amount
+  const findNoteWithAmount = (notes: typeof bobNotes, requiredAmount: bigint) => {
+    return notes.find((n) => n.amount.amount >= requiredAmount);
+  };
 
   // ALICE
-  console.log(`   - ALICE에게 ${aliceSalary} USDC transfer`);
+  console.log(`   - Transfer ${aliceSalaryDisplay} USDC to ALICE`);
   const aliceWaAddress = await sdk.CompleteWaAddress.fromSecretKey(aliceSecretKey);
+  const aliceNote = findNoteWithAmount(bobNotes, aliceSalary);
+  if (!aliceNote) {
+    throw new Error(`BOB has no sufficient note for ALICE transfer. Available: ${bobNotes.map(n => n.amount.amount.toString()).join(", ")}`);
+  }
   await interfaceSdk.poolErc20.transfer({
     secretKey: bobSecretKey,
-    fromNote: bobNotes[0],
+    fromNote: aliceNote,
     to: aliceWaAddress,
     amount: await sdk.TokenAmount.from({ token: await usdc.getAddress(), amount: aliceSalary }),
   });
-  console.log("   ✅ ALICE transfer 완료");
+  console.log("   ALICE transfer completed");
   await backendSdk.rollup.rollup();
-  console.log("   ✅ 첫 번째 transfer rollup 완료");
+  console.log("   First transfer rollup completed");
 
   // CHARLIE
-  console.log(`   - CHARLIE에게 ${charlieSalary} USDC transfer`);
+  console.log(`   - Transfer ${charlieSalaryDisplay} USDC to CHARLIE`);
   const charlieWaAddress = await sdk.CompleteWaAddress.fromSecretKey(charlieSecretKey);
   const bobNotesAfterAlice = await interfaceSdk.poolErc20.getBalanceNotesOf(usdc, bobSecretKey);
+  expect(bobNotesAfterAlice.length).to.be.greaterThan(0);
+  const charlieNote = findNoteWithAmount(bobNotesAfterAlice, charlieSalary);
+  if (!charlieNote) {
+    throw new Error(`BOB has no sufficient note for CHARLIE transfer. Available: ${bobNotesAfterAlice.map(n => n.amount.amount.toString()).join(", ")}`);
+  }
   await interfaceSdk.poolErc20.transfer({
     secretKey: bobSecretKey,
-    fromNote: bobNotesAfterAlice[0],
+    fromNote: charlieNote,
     to: charlieWaAddress,
     amount: await sdk.TokenAmount.from({ token: await usdc.getAddress(), amount: charlieSalary }),
   });
-  console.log("   ✅ CHARLIE transfer 완료");
+  console.log("   CHARLIE transfer completed");
   await backendSdk.rollup.rollup();
-  console.log("   ✅ 두 번째 transfer rollup 완료");
+  console.log("   Second transfer rollup completed");
 
   // DAVID
-  console.log(`   - DAVID에게 ${davidSalary} USDC transfer`);
+  console.log(`   - Transfer ${davidSalaryDisplay} USDC to DAVID`);
   const davidWaAddress = await sdk.CompleteWaAddress.fromSecretKey(davidSecretKey);
   const bobNotesAfterCharlie = await interfaceSdk.poolErc20.getBalanceNotesOf(usdc, bobSecretKey);
+  expect(bobNotesAfterCharlie.length).to.be.greaterThan(0);
+  const davidNote = findNoteWithAmount(bobNotesAfterCharlie, davidSalary);
+  if (!davidNote) {
+    throw new Error(`BOB has no sufficient note for DAVID transfer. Available: ${bobNotesAfterCharlie.map(n => n.amount.amount.toString()).join(", ")}`);
+  }
   await interfaceSdk.poolErc20.transfer({
     secretKey: bobSecretKey,
-    fromNote: bobNotesAfterCharlie[0],
+    fromNote: davidNote,
     to: davidWaAddress,
     amount: await sdk.TokenAmount.from({ token: await usdc.getAddress(), amount: davidSalary }),
   });
-  console.log("   ✅ DAVID transfer 완료");
+  console.log("   DAVID transfer completed");
   const transferRollupTx = await backendSdk.rollup.rollup();
-  console.log(`   ✅ Rollup 완료 - 트랜잭션 해시: ${transferRollupTx.hash}\n`);
+  console.log(`   Rollup completed - Transaction hash: ${transferRollupTx.hash}\n`);
 
   // Verify balances
   const aliceBalance = await interfaceSdk.poolErc20.balanceOf(usdc, aliceSecretKey);
   const charlieBalance = await interfaceSdk.poolErc20.balanceOf(usdc, charlieSecretKey);
   const davidBalance = await interfaceSdk.poolErc20.balanceOf(usdc, davidSecretKey);
-  console.log(`   ✅ ALICE의 shielded balance: ${aliceBalance} USDC`);
-  console.log(`   ✅ CHARLIE의 shielded balance: ${charlieBalance} USDC`);
-  console.log(`   ✅ DAVID의 shielded balance: ${davidBalance} USDC\n`);
+  const aliceBalanceFormatted = await formatUnits(usdc, aliceBalance);
+  const charlieBalanceFormatted = await formatUnits(usdc, charlieBalance);
+  const davidBalanceFormatted = await formatUnits(usdc, davidBalance);
+  console.log(`   ALICE's shielded balance: ${aliceBalanceFormatted} USDC`);
+  console.log(`   CHARLIE's shielded balance: ${charlieBalanceFormatted} USDC`);
+  console.log(`   DAVID's shielded balance: ${davidBalanceFormatted} USDC\n`);
 
   // Step 4: Unshields
-  console.log("💵 Step 4: 3명이 각각 unshield (현금화)");
-  console.log(`   - ALICE 받을 주소: ${ALICE_ADDRESS}`);
-  console.log(`   - CHARLIE 받을 주소: ${CHARLIE_ADDRESS}`);
-  console.log(`   - DAVID 받을 주소: ${DAVID_ADDRESS}`);
+  console.log("Step 4: All 3 recipients unshield (withdraw)");
+  console.log(`   - ALICE recipient address: ${ALICE_ADDRESS}`);
+  console.log(`   - CHARLIE recipient address: ${CHARLIE_ADDRESS}`);
+  console.log(`   - DAVID recipient address: ${DAVID_ADDRESS}`);
 
   const aliceNotes = await interfaceSdk.poolErc20.getBalanceNotesOf(usdc, aliceSecretKey);
+  const aliceNoteForUnshield = findNoteWithAmount(aliceNotes, aliceSalary);
+  if (!aliceNoteForUnshield) {
+    throw new Error(`ALICE has no sufficient note for unshield. Available: ${aliceNotes.map(n => n.amount.amount.toString()).join(", ")}`);
+  }
   await interfaceSdk.poolErc20.unshield({
     secretKey: aliceSecretKey,
-    fromNote: aliceNotes[0],
+    fromNote: aliceNoteForUnshield,
     token: await usdc.getAddress(),
     to: ALICE_ADDRESS,
     amount: aliceSalary,
   });
-  console.log("   ✅ ALICE unshield 완료");
+  console.log("   ALICE unshield completed");
 
   const charlieNotes = await interfaceSdk.poolErc20.getBalanceNotesOf(usdc, charlieSecretKey);
+  const charlieNoteForUnshield = findNoteWithAmount(charlieNotes, charlieSalary);
+  if (!charlieNoteForUnshield) {
+    throw new Error(`CHARLIE has no sufficient note for unshield. Available: ${charlieNotes.map(n => n.amount.amount.toString()).join(", ")}`);
+  }
   await interfaceSdk.poolErc20.unshield({
     secretKey: charlieSecretKey,
-    fromNote: charlieNotes[0],
+    fromNote: charlieNoteForUnshield,
     token: await usdc.getAddress(),
     to: CHARLIE_ADDRESS,
     amount: charlieSalary,
   });
-  console.log("   ✅ CHARLIE unshield 완료");
+  console.log("   CHARLIE unshield completed");
 
   const davidNotes = await interfaceSdk.poolErc20.getBalanceNotesOf(usdc, davidSecretKey);
+  const davidNoteForUnshield = findNoteWithAmount(davidNotes, davidSalary);
+  if (!davidNoteForUnshield) {
+    throw new Error(`DAVID has no sufficient note for unshield. Available: ${davidNotes.map(n => n.amount.amount.toString()).join(", ")}`);
+  }
   await interfaceSdk.poolErc20.unshield({
     secretKey: davidSecretKey,
-    fromNote: davidNotes[0],
+    fromNote: davidNoteForUnshield,
     token: await usdc.getAddress(),
     to: DAVID_ADDRESS,
     amount: davidSalary,
   });
-  console.log("   ✅ DAVID unshield 완료\n");
+  console.log("   DAVID unshield completed\n");
 
   // Step 5: Final rollup
-  console.log("🎯 Step 5: 단일 rollup으로 3개의 unshield 처리 (핵심!)");
+  // Note: Each unshield transaction has already transferred tokens (immediate transfer in PoolERC20.sol unshield function)
+  // Rollup adds note hashes and nullifiers of pending transactions to Merkle tree to update tree state
+  // Future improvement: Remove immediate transfer from unshield and implement batch transfer in rollup
+  console.log("Step 5: Rollup to update tree state for 3 unshield transactions");
+  console.log("   - Each unshield transaction has already individually transferred tokens");
+  console.log("   - Rollup bundles 3 pending unshield transactions into a single rollup to update tree state");
   const unshieldRollupStartTime = Date.now();
   const unshieldRollupTx = await backendSdk.rollup.rollup();
   const unshieldRollupReceipt = await unshieldRollupTx.wait();
   const unshieldRollupDuration = Date.now() - unshieldRollupStartTime;
 
-  console.log(`   ✅ Rollup 완료 - 트랜잭션 해시: ${unshieldRollupTx.hash}`);
-  console.log(`   ✅ Gas 사용량: ${unshieldRollupReceipt?.gasUsed?.toString()}`);
-  console.log(`   ✅ Rollup 처리 시간: ${unshieldRollupDuration}ms\n`);
+  console.log(`   Rollup completed - Transaction hash: ${unshieldRollupTx.hash}`);
+  console.log(`   Gas used: ${unshieldRollupReceipt?.gasUsed?.toString()}`);
+  console.log(`   Rollup processing time: ${unshieldRollupDuration}ms\n`);
 
   // Step 6: Final verification
-  console.log("✅ Step 6: 최종 검증");
+  console.log("Step 6: Final verification");
   const aliceFinalBalance = await usdc.balanceOf(ALICE_ADDRESS);
   const charlieFinalBalance = await usdc.balanceOf(CHARLIE_ADDRESS);
   const davidFinalBalance = await usdc.balanceOf(DAVID_ADDRESS);
 
-  console.log(`   ✅ ALICE의 최종 USDC balance: ${aliceFinalBalance.toString()}`);
-  console.log(`   ✅ CHARLIE의 최종 USDC balance: ${charlieFinalBalance.toString()}`);
-  console.log(`   ✅ DAVID의 최종 USDC balance: ${davidFinalBalance.toString()}\n`);
+  const aliceFinalBalanceFormatted = await formatUnits(usdc, aliceFinalBalance);
+  const charlieFinalBalanceFormatted = await formatUnits(usdc, charlieFinalBalance);
+  const davidFinalBalanceFormatted = await formatUnits(usdc, davidFinalBalance);
 
-  console.log("\n🎉 BOB Payroll 시나리오 테스트 완료!");
-  console.log("\n📊 요약:");
+  console.log(`   ALICE's final USDC balance: ${aliceFinalBalanceFormatted} USDC`);
+  console.log(`   CHARLIE's final USDC balance: ${charlieFinalBalanceFormatted} USDC`);
+  console.log(`   DAVID's final USDC balance: ${davidFinalBalanceFormatted} USDC\n`);
+
+  console.log("\nBOB Payroll Scenario Test Completed!");
+  console.log("\nSummary:");
   console.log(`   - Shield rollup: ${shieldRollupTx.hash}`);
   console.log(`   - Transfer rollup: ${transferRollupTx.hash}`);
   console.log(`   - Unshield rollup: ${unshieldRollupTx.hash}`);
-  console.log(`\n📬 토큰 수령 주소:`);
-  console.log(`   - ALICE: ${ALICE_ADDRESS} -> ${aliceFinalBalance.toString()} USDC`);
-  console.log(`   - CHARLIE: ${CHARLIE_ADDRESS} -> ${charlieFinalBalance.toString()} USDC`);
-  console.log(`   - DAVID: ${DAVID_ADDRESS} -> ${davidFinalBalance.toString()} USDC`);
-  console.log(`\n🔗 Mantle Sepolia Explorer:`);
+  console.log(`\nToken recipient addresses:`);
+  console.log(`   - ALICE: ${ALICE_ADDRESS} -> ${aliceFinalBalanceFormatted} USDC`);
+  console.log(`   - CHARLIE: ${CHARLIE_ADDRESS} -> ${charlieFinalBalanceFormatted} USDC`);
+  console.log(`   - DAVID: ${DAVID_ADDRESS} -> ${davidFinalBalanceFormatted} USDC`);
+  console.log(`\nMantle Sepolia Explorer:`);
   console.log(`   https://sepolia.mantlescan.xyz/tx/${unshieldRollupTx.hash}`);
 }
 

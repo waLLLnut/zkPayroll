@@ -1,12 +1,17 @@
 #!/usr/bin/env tsx
 /**
- * BOB Payroll 시나리오 테스트
+ * BOB Payroll Scenario Test
  *
- * 시나리오:
- * 1. BOB이 토큰을 shielded pool에 shield (암호화)
- * 2. BOB이 3명(ALICE, CHARLIE, DAVID)에게 Transfer
- * 3. 3명 모두 각각 unshield로 현금화
- * 4. 이 3명의 unshield가 단일 rollup으로 한 블록에서 처리되도록
+ * Scenario:
+ * 1. BOB shields tokens into the shielded pool (encryption)
+ * 2. BOB transfers to 3 recipients (ALICE, CHARLIE, DAVID)
+ * 3. All 3 recipients unshield their tokens
+ *    - Each unshield transaction immediately transfers tokens (PoolERC20.sol unshield function)
+ *    - Rollup only updates the tree, token transfers are already completed
+ *
+ * Future Improvements:
+ * - Remove immediate transfer from unshield and implement batch transfer in rollup
+ * - This will allow 3 unshield transactions to be bundled in a single rollup and processed in one block
  */
 
 import { expect } from "chai";
@@ -17,10 +22,10 @@ import { parseUnits } from "../shared/utils";
 import { MockERC20__factory, PoolERC20__factory } from "../typechain-types";
 
 async function main() {
-  console.log("🚀 BOB Payroll 시나리오 테스트 시작\n");
+  console.log("BOB Payroll Scenario Test Started\n");
 
-  // 1. 컨트랙트 배포 및 초기화
-  console.log("📦 컨트랙트 배포 중...");
+  // 1. Deploy and initialize contracts
+  console.log("Deploying contracts...");
   await typedDeployments.fixture();
   const [deployer, bob, alice, charlie, david] = await ethers.getSigners();
   const pool = PoolERC20__factory.connect(
@@ -44,9 +49,9 @@ async function main() {
   const backendSdk = createBackendSdk(coreSdk, trees, {
     rollup: noir.getCircuitJson("rollup"),
   });
-  console.log("✅ 컨트랙트 배포 및 초기화 완료\n");
+  console.log("Contract deployment and initialization completed\n");
 
-  // Secret keys 설정
+  // Secret keys
   const bobSecretKey =
     "0x2120f33c0d324bfe571a18c1d5a1c9cdc6db60621e35bc78be1ced339f936a71";
   const aliceSecretKey =
@@ -56,47 +61,47 @@ async function main() {
   const davidSecretKey =
     "0x048c0439a42280637b202fd2f0d25d6e8e3c11908eab966a6d85bd6797eed5d5";
 
-  const payrollAmount = 1000n; // BOB이 shield할 총 금액
-  const aliceSalary = 300n; // ALICE에게 지급할 금액
-  const charlieSalary = 400n; // CHARLIE에게 지급할 금액
-  const davidSalary = 300n; // DAVID에게 지급할 금액
+  const payrollAmount = 1000n; // Total amount BOB will shield
+  const aliceSalary = 300n; // Amount to pay ALICE
+  const charlieSalary = 400n; // Amount to pay CHARLIE
+  const davidSalary = 300n; // Amount to pay DAVID
 
-  // 2. BOB이 토큰을 shielded pool에 shield
-  console.log("💰 Step 1: BOB이 토큰을 shielded pool에 shield");
-  console.log(`   - Shield 금액: ${payrollAmount} USDC`);
+  // 2. BOB shields tokens into the shielded pool
+  console.log("Step 1: BOB shields tokens into the shielded pool");
+  console.log(`   - Shield amount: ${payrollAmount} USDC`);
   const { note: bobShieldNote } = await interfaceSdk.poolErc20.shield({
     account: deployer,
     token: usdc,
     amount: payrollAmount,
     secretKey: bobSecretKey,
   });
-  console.log("   ✅ Shield 완료\n");
+  console.log("   Shield completed\n");
 
-  // 3. Shield rollup (shield가 먼저 처리되어야 transfer 가능)
-  console.log("🔄 Step 2: Shield rollup 처리");
+  // 3. Shield rollup (shield must be processed before transfer is possible)
+  console.log("Step 2: Shield rollup processing");
   const shieldRollupTx = await backendSdk.rollup.rollup();
   const shieldRollupReceipt = await shieldRollupTx.wait();
-  console.log(`   ✅ Rollup 완료 - 트랜잭션 해시: ${shieldRollupTx.hash}`);
-  console.log(`   ✅ Gas 사용량: ${shieldRollupReceipt?.gasUsed?.toString()}\n`);
+  console.log(`   Rollup completed - Transaction hash: ${shieldRollupTx.hash}`);
+  console.log(`   Gas used: ${shieldRollupReceipt?.gasUsed?.toString()}\n`);
 
-  // BOB의 잔액 확인
+  // Check BOB's balance
   const bobBalanceAfterShield = await interfaceSdk.poolErc20.balanceOf(
     usdc,
     bobSecretKey,
   );
   expect(bobBalanceAfterShield).to.equal(payrollAmount);
-  console.log(`   ✅ BOB의 shielded balance: ${bobBalanceAfterShield} USDC\n`);
+  console.log(`   BOB's shielded balance: ${bobBalanceAfterShield} USDC\n`);
 
-  // 4. BOB이 3명에게 Transfer (각 transfer 후 rollup 필요)
-  console.log("💸 Step 3: BOB이 3명에게 Transfer");
+  // 4. BOB transfers to 3 recipients (rollup needed after each transfer)
+  console.log("Step 3: BOB transfers to 3 recipients");
   const bobNotes = await interfaceSdk.poolErc20.getBalanceNotesOf(
     usdc,
     bobSecretKey,
   );
   expect(bobNotes.length).to.be.greaterThan(0);
 
-  // ALICE에게 transfer
-  console.log(`   - ALICE에게 ${aliceSalary} USDC transfer`);
+  // Transfer to ALICE
+  console.log(`   - Transfer ${aliceSalary} USDC to ALICE`);
   const aliceWaAddress = await sdk.CompleteWaAddress.fromSecretKey(
     aliceSecretKey,
   );
@@ -110,15 +115,15 @@ async function main() {
     to: aliceWaAddress,
     amount: aliceTransferAmount,
   });
-  console.log("   ✅ ALICE transfer 완료");
+  console.log("   ALICE transfer completed");
 
-  // 첫 번째 transfer rollup (changeNote가 Merkle Tree에 포함되도록)
-  console.log("   - 첫 번째 transfer rollup 처리 중...");
+  // First transfer rollup (so changeNote is included in Merkle Tree)
+  console.log("   - Processing first transfer rollup...");
   await backendSdk.rollup.rollup();
-  console.log("   ✅ 첫 번째 transfer rollup 완료");
+  console.log("   First transfer rollup completed");
 
-  // CHARLIE에게 transfer (rollup 후 changeNote 사용 가능)
-  console.log(`   - CHARLIE에게 ${charlieSalary} USDC transfer`);
+  // Transfer to CHARLIE (changeNote available after rollup)
+  console.log(`   - Transfer ${charlieSalary} USDC to CHARLIE`);
   const charlieWaAddress = await sdk.CompleteWaAddress.fromSecretKey(
     charlieSecretKey,
   );
@@ -126,7 +131,7 @@ async function main() {
     token: await usdc.getAddress(),
     amount: charlieSalary,
   });
-  // rollup 후 changeNote를 가져옴
+  // Get changeNote after rollup
   const bobNotesAfterAlice = await interfaceSdk.poolErc20.getBalanceNotesOf(
     usdc,
     bobSecretKey,
@@ -134,19 +139,19 @@ async function main() {
   expect(bobNotesAfterAlice.length).to.be.greaterThan(0);
   const charlieTransferResult = await interfaceSdk.poolErc20.transfer({
     secretKey: bobSecretKey,
-    fromNote: bobNotesAfterAlice[0], // rollup 후 사용 가능한 note
+    fromNote: bobNotesAfterAlice[0], // Note available after rollup
     to: charlieWaAddress,
     amount: charlieTransferAmount,
   });
-  console.log("   ✅ CHARLIE transfer 완료");
+  console.log("   CHARLIE transfer completed");
 
-  // 두 번째 transfer rollup
-  console.log("   - 두 번째 transfer rollup 처리 중...");
+  // Second transfer rollup
+  console.log("   - Processing second transfer rollup...");
   await backendSdk.rollup.rollup();
-  console.log("   ✅ 두 번째 transfer rollup 완료");
+  console.log("   Second transfer rollup completed");
 
-  // DAVID에게 transfer
-  console.log(`   - DAVID에게 ${davidSalary} USDC transfer`);
+  // Transfer to DAVID
+  console.log(`   - Transfer ${davidSalary} USDC to DAVID`);
   const davidWaAddress = await sdk.CompleteWaAddress.fromSecretKey(
     davidSecretKey,
   );
@@ -154,28 +159,28 @@ async function main() {
     token: await usdc.getAddress(),
     amount: davidSalary,
   });
-  // rollup 후 changeNote를 가져옴
+  // Get changeNote after rollup
   const bobNotesAfterCharlie =
     await interfaceSdk.poolErc20.getBalanceNotesOf(usdc, bobSecretKey);
   expect(bobNotesAfterCharlie.length).to.be.greaterThan(0);
   const davidTransferResult = await interfaceSdk.poolErc20.transfer({
     secretKey: bobSecretKey,
-    fromNote: bobNotesAfterCharlie[0], // rollup 후 사용 가능한 note
+    fromNote: bobNotesAfterCharlie[0], // Note available after rollup
     to: davidWaAddress,
     amount: davidTransferAmount,
   });
-  console.log("   ✅ DAVID transfer 완료");
+  console.log("   DAVID transfer completed");
 
-  // 세 번째 transfer rollup
-  console.log("   - 세 번째 transfer rollup 처리 중...");
+  // Third transfer rollup
+  console.log("   - Processing third transfer rollup...");
   const transferRollupTx = await backendSdk.rollup.rollup();
   const transferRollupReceipt = await transferRollupTx.wait();
-  console.log(`   ✅ Rollup 완료 - 트랜잭션 해시: ${transferRollupTx.hash}`);
+  console.log(`   Rollup completed - Transaction hash: ${transferRollupTx.hash}`);
   console.log(
-    `   ✅ Gas 사용량: ${transferRollupReceipt?.gasUsed?.toString()}\n`,
+    `   Gas used: ${transferRollupReceipt?.gasUsed?.toString()}\n`,
   );
 
-  // 각자의 잔액 확인
+  // Verify individual balances
   const aliceBalance = await interfaceSdk.poolErc20.balanceOf(
     usdc,
     aliceSecretKey,
@@ -191,18 +196,18 @@ async function main() {
   expect(aliceBalance).to.equal(aliceSalary);
   expect(charlieBalance).to.equal(charlieSalary);
   expect(davidBalance).to.equal(davidSalary);
-  console.log(`   ✅ ALICE의 shielded balance: ${aliceBalance} USDC`);
-  console.log(`   ✅ CHARLIE의 shielded balance: ${charlieBalance} USDC`);
-  console.log(`   ✅ DAVID의 shielded balance: ${davidBalance} USDC\n`);
+  console.log(`   ALICE's shielded balance: ${aliceBalance} USDC`);
+  console.log(`   CHARLIE's shielded balance: ${charlieBalance} USDC`);
+  console.log(`   DAVID's shielded balance: ${davidBalance} USDC\n`);
 
-  // 6. 3명이 각각 unshield (현금화)
-  console.log("💵 Step 5: 3명이 각각 unshield (현금화)");
+  // 6. All 3 recipients unshield (withdraw)
+  console.log("Step 5: All 3 recipients unshield (withdraw)");
   const aliceAddress = await alice.getAddress();
   const charlieAddress = await charlie.getAddress();
   const davidAddress = await david.getAddress();
 
   // ALICE unshield
-  console.log(`   - ALICE unshield ${aliceSalary} USDC`);
+  console.log(`   - ALICE unshields ${aliceSalary} USDC`);
   const aliceNotes = await interfaceSdk.poolErc20.getBalanceNotesOf(
     usdc,
     aliceSecretKey,
@@ -215,10 +220,10 @@ async function main() {
     to: aliceAddress,
     amount: aliceSalary,
   });
-  console.log("   ✅ ALICE unshield 완료");
+  console.log("   ALICE unshield completed");
 
   // CHARLIE unshield
-  console.log(`   - CHARLIE unshield ${charlieSalary} USDC`);
+  console.log(`   - CHARLIE unshields ${charlieSalary} USDC`);
   const charlieNotes = await interfaceSdk.poolErc20.getBalanceNotesOf(
     usdc,
     charlieSecretKey,
@@ -231,10 +236,10 @@ async function main() {
     to: charlieAddress,
     amount: charlieSalary,
   });
-  console.log("   ✅ CHARLIE unshield 완료");
+  console.log("   CHARLIE unshield completed");
 
   // DAVID unshield
-  console.log(`   - DAVID unshield ${davidSalary} USDC`);
+  console.log(`   - DAVID unshields ${davidSalary} USDC`);
   const davidNotes = await interfaceSdk.poolErc20.getBalanceNotesOf(
     usdc,
     davidSecretKey,
@@ -247,23 +252,27 @@ async function main() {
     to: davidAddress,
     amount: davidSalary,
   });
-  console.log("   ✅ DAVID unshield 완료\n");
+  console.log("   DAVID unshield completed\n");
 
-  // 7. 단일 rollup으로 3개의 unshield를 처리 (핵심!)
-  console.log("🎯 Step 6: 단일 rollup으로 3개의 unshield 처리 (핵심!)");
-  console.log("   - 3개의 unshield 트랜잭션이 하나의 rollup으로 묶여 처리됩니다");
+  // 7. Rollup to update tree state for 3 unshield transactions
+  // Note: Each unshield transaction has already transferred tokens (immediate transfer in PoolERC20.sol unshield function)
+  // Rollup adds note hashes and nullifiers of pending transactions to Merkle tree to update tree state
+  // Future improvement: Remove immediate transfer from unshield and implement batch transfer in rollup
+  console.log("Step 6: Rollup to update tree state for 3 unshield transactions");
+  console.log("   - Each unshield transaction has already individually transferred tokens");
+  console.log("   - Rollup bundles 3 pending unshield transactions into a single rollup to update tree state");
   const unshieldRollupStartTime = Date.now();
   const unshieldRollupTx = await backendSdk.rollup.rollup();
   const unshieldRollupReceipt = await unshieldRollupTx.wait();
   const unshieldRollupEndTime = Date.now();
   const unshieldRollupDuration = unshieldRollupEndTime - unshieldRollupStartTime;
 
-  console.log(`   ✅ Rollup 완료 - 트랜잭션 해시: ${unshieldRollupTx.hash}`);
-  console.log(`   ✅ Gas 사용량: ${unshieldRollupReceipt?.gasUsed?.toString()}`);
-  console.log(`   ✅ Rollup 처리 시간: ${unshieldRollupDuration}ms\n`);
+  console.log(`   Rollup completed - Transaction hash: ${unshieldRollupTx.hash}`);
+  console.log(`   Gas used: ${unshieldRollupReceipt?.gasUsed?.toString()}`);
+  console.log(`   Rollup processing time: ${unshieldRollupDuration}ms\n`);
 
-  // 8. 최종 검증
-  console.log("✅ Step 7: 최종 검증");
+  // 8. Final verification
+  console.log("Step 7: Final verification");
   const aliceFinalBalance = await usdc.balanceOf(aliceAddress);
   const charlieFinalBalance = await usdc.balanceOf(charlieAddress);
   const davidFinalBalance = await usdc.balanceOf(davidAddress);
@@ -272,21 +281,21 @@ async function main() {
   expect(charlieFinalBalance).to.equal(charlieSalary);
   expect(davidFinalBalance).to.equal(davidSalary);
 
-  console.log(`   ✅ ALICE의 최종 USDC balance: ${aliceFinalBalance.toString()}`);
+  console.log(`   ALICE's final USDC balance: ${aliceFinalBalance.toString()}`);
   console.log(
-    `   ✅ CHARLIE의 최종 USDC balance: ${charlieFinalBalance.toString()}`,
+    `   CHARLIE's final USDC balance: ${charlieFinalBalance.toString()}`,
   );
-  console.log(`   ✅ DAVID의 최종 USDC balance: ${davidFinalBalance.toString()}`);
+  console.log(`   DAVID's final USDC balance: ${davidFinalBalance.toString()}`);
 
-  // Pending 트랜잭션 확인 (모두 처리되어야 함)
+  // Verify pending transactions (all should be processed)
   const pendingTxs = await pool.getAllPendingTxs();
   const unrolledTxs = pendingTxs.filter((tx) => !tx.rolledUp);
   console.log(
-    `   ✅ 처리되지 않은 pending 트랜잭션: ${unrolledTxs.length}개`,
+    `   Unprocessed pending transactions: ${unrolledTxs.length}`,
   );
   expect(unrolledTxs.length).to.equal(0);
 
-  // 각자의 shielded balance는 0이어야 함 (모두 unshield했으므로)
+  // Each recipient's shielded balance should be 0 (all have unshielded)
   const aliceShieldedBalance = await interfaceSdk.poolErc20.balanceOf(
     usdc,
     aliceSecretKey,
@@ -302,22 +311,22 @@ async function main() {
   expect(aliceShieldedBalance).to.equal(0n);
   expect(charlieShieldedBalance).to.equal(0n);
   expect(davidShieldedBalance).to.equal(0n);
-  console.log(`   ✅ ALICE의 shielded balance: ${aliceShieldedBalance}`);
-  console.log(`   ✅ CHARLIE의 shielded balance: ${charlieShieldedBalance}`);
-  console.log(`   ✅ DAVID의 shielded balance: ${davidShieldedBalance}\n`);
+  console.log(`   ALICE's shielded balance: ${aliceShieldedBalance}`);
+  console.log(`   CHARLIE's shielded balance: ${charlieShieldedBalance}`);
+  console.log(`   DAVID's shielded balance: ${davidShieldedBalance}\n`);
 
-  console.log("\n🎉 BOB Payroll 시나리오 테스트 완료!");
-  console.log("\n📊 요약:");
+  console.log("\nBOB Payroll Scenario Test Completed!");
+  console.log("\nSummary:");
   console.log(`   - Shield rollup: ${shieldRollupTx.hash}`);
   console.log(`   - Transfer rollup: ${transferRollupTx.hash}`);
   console.log(
-    `   - Unshield rollup (3개 unshield를 단일 rollup으로 처리): ${unshieldRollupTx.hash}`,
+    `   - Unshield rollup (tree state update for 3 unshield transactions): ${unshieldRollupTx.hash}`,
   );
   console.log(
-    `   - Unshield rollup 처리 시간: ${unshieldRollupDuration}ms`,
+    `   - Unshield rollup processing time: ${unshieldRollupDuration}ms`,
   );
   console.log(
-    `   - 총 3개의 unshield 트랜잭션이 하나의 블록에서 처리되었습니다!`,
+    `   - Each unshield transaction individually transferred tokens, and rollup updated tree state`,
   );
 }
 
@@ -325,4 +334,3 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-
