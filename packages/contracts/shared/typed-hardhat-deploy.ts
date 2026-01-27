@@ -22,7 +22,7 @@ task("deploy-and-export")
   )
   .addOptionalParam(
     "gasprice",
-    "Price in wei per unit of gas (e.g., '1gwei')",
+    "Price in wei per unit of gas (e.g., '20000000' or '20gwei')",
     undefined,
     types.string,
   )
@@ -37,11 +37,17 @@ task("deploy-and-export")
     }
     
     if (args.gasprice) {
-      const unit = "gwei";
-      assert(args.gasprice.endsWith(unit), `gasprice must end with ${unit}`);
-      const gasprice = ethers
-        .parseUnits(args.gasprice.slice(0, -unit.length), unit)
-        .toString();
+      let gasprice: string;
+      // Check if it ends with 'gwei' (case-insensitive)
+      const gaspriceLower = args.gasprice.toLowerCase();
+      if (gaspriceLower.endsWith("gwei")) {
+        const unit = "gwei";
+        const value = args.gasprice.slice(0, -unit.length);
+        gasprice = ethers.parseUnits(value, unit).toString();
+      } else {
+        // Assume it's already in wei (numeric string)
+        gasprice = args.gasprice;
+      }
       deployOptions.gasprice = gasprice;
     }
     

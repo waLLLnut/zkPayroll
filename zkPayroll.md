@@ -40,8 +40,13 @@ Deploy contracts to Mantle Sepolia:
 ```sh
 cd packages/contracts
 source .env
-pnpm hardhat deploy-and-export --network mantleSepolia --reset
+pnpm hardhat deploy-and-export --gasprice 20000000 --network mantleSepolia --reset
 ```
+
+**Gas Price 옵션:**
+- 숫자 값 (wei 단위): `--gasprice 20000000`
+- gwei 단위: `--gasprice 20gwei`
+- 환경 변수 사용: `GAS_PRICE=20000000 pnpm hardhat deploy-and-export --network mantleSepolia --reset`
 
 ### 2. Run Local Test (Bob Payroll Scenario)
 

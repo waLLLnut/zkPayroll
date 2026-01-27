@@ -23,6 +23,10 @@ const config: HardhatUserConfig = {
       url: process.env.RPC_URL || "https://rpc.sepolia.mantle.xyz",
       chainId: 5003,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      // Gas price can be set via environment variable or command line flag
+      gasPrice: process.env.GAS_PRICE
+        ? parseInt(process.env.GAS_PRICE)
+        : undefined,
     },
     mantleTestnet: {
       url: process.env.MANTLE_TESTNET_RPC_URL || "https://rpc.testnet.mantle.xyz",

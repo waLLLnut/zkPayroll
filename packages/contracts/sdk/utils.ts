@@ -100,13 +100,7 @@ export function readNativeHonkProof(pathToProofDir: string) {
   const publicInputsPath = path.join(pathToProofDir, "public_inputs");
   const proofFieldsPath = path.join(pathToProofDir, "proof_fields.json");
   
-  let proof = fs.readFileSync(proofPath);
-  
-  // bb 바이너리가 생성하는 proof는 첫 4바이트가 길이 헤더임
-  // UltraHonkBackend는 길이 헤더 없이 proof를 기대하므로 항상 제거
-  if (proof.length > 4) {
-    proof = proof.slice(4);
-  }
+  const proof = fs.readFileSync(proofPath);
   
   // public_inputs 파일 또는 proof_fields.json 파일에서 public inputs 추출
   let publicInputs: string[];
